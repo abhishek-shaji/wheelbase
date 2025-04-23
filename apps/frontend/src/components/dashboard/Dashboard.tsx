@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../app/store/auth';
+import { useAuthStore } from '@/store/auth';
 import Button from '../ui/button';
-import authService from '../../app/services/auth';
+import authService from '@/services/auth';
 import { useMutation } from '@tanstack/react-query';
 
 export default function Dashboard() {

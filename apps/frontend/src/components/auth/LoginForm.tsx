@@ -2,14 +2,27 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import Button from '../ui/button';
-import Input from '../ui/input';
-import authService, { UserLogin } from '../../app/services/auth';
-import { useAuthStore } from '../../app/store/auth';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import authService, { UserLogin } from '@/services/auth';
+import { useAuthStore } from '@/store/auth';
+import { Label } from '../ui/label';
+
+const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(8, 'Password must be at least 8 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const [serverError, setServerError] = useState('');
@@ -20,7 +33,8 @@ export default function LoginForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UserLogin>({
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -40,72 +54,87 @@ export default function LoginForm() {
     },
   });
 
-  const onSubmit = (data: UserLogin) => {
+  const onSubmit = (data: LoginFormValues) => {
     setServerError('');
-    loginMutation.mutate(data);
+    loginMutation.mutate(data as UserLogin);
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="mb-4 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Login</h1>
-        <p className="mt-1 text-gray-600">
-          Welcome back! Please sign in to your account.
-        </p>
-      </div>
-
-      {serverError && (
-        <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700">
-          {serverError}
+    <div className="rounded-lg p-6 shadow-md">
+      <div className="flex w-full flex-col space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white">Login to WheelBase</h1>
+          <p className="mt-2 text-gray-400">
+            Welcome back! Please sign in to your account.
+          </p>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="your@email.com"
-          error={errors.email?.message}
-          fullWidth
-          {...register('email', {
-            required: 'Email is required',
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: 'Invalid email address',
-            },
-          })}
-        />
+        {serverError && (
+          <div className="rounded-md bg-red-900/30 border border-red-700 p-4 text-sm text-red-400">
+            {serverError}
+          </div>
+        )}
 
-        <Input
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          error={errors.password?.message}
-          fullWidth
-          {...register('password', {
-            required: 'Password is required',
-            minLength: {
-              value: 8,
-              message: 'Password must be at least 8 characters',
-            },
-          })}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              {...register('email')}
+              aria-invalid={errors.email ? 'true' : 'false'}
+              className="mt-1"
+            />
+            {errors.email && (
+              <p className="text-sm text-red-400">{errors.email.message}</p>
+            )}
+          </div>
 
-        <Button type="submit" fullWidth isLoading={loginMutation.isPending}>
-          Sign in
-        </Button>
-      </form>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              {...register('password')}
+              aria-invalid={errors.password ? 'true' : 'false'}
+              className="mt-1"
+            />
+            {errors.password && (
+              <p className="text-sm text-red-400">{errors.password.message}</p>
+            )}
+          </div>
 
-      <div className="mt-6 text-center text-sm">
-        <p className="text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link
-            href="/register"
-            className="font-medium text-blue-600 hover:text-blue-500"
+          <div className="text-sm">
+            <Link
+              href="/forgot-password"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              Forgot your password?
+            </Link>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loginMutation.isPending}
           >
-            Sign up
-          </Link>
-        </p>
+            {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+          </Button>
+        </form>
+
+        <div className="text-center text-sm">
+          <p className="text-gray-400">
+            Don&apos;t have an account?{' '}
+            <Link
+              href="/register"
+              className="font-medium text-blue-400 hover:text-blue-300"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

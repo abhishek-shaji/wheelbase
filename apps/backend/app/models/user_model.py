@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, EmailStr, Field, UUID4
 
 
@@ -39,10 +38,21 @@ class UserResponse(BaseModel):
     email: EmailStr = Field(
         description="User's email address", examples=["john.doe@example.com"]
     )
+    firstname: str = Field(
+        description="User's first name", examples=["John"]
+    )
+    lastname: str = Field(
+        description="User's last name", examples=["Doe"]
+    )
 
     class Config:
         orm_mode = True
         schema_extra = {
             "description": "Schema for user response data",
-            "example": {"id": 1, "email": "john.doe@example.com"},
+            "example": {
+                "id": 1,
+                "email": "john.doe@example.com",
+                "firstname": "John",
+                "lastname": "Doe"
+            },
         }

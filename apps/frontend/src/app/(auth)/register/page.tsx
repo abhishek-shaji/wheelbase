@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../store/auth';
+import { useAuthStore } from '@/store/auth';
 import RegisterForm from '@/components/auth/RegisterForm';
 
 export default function RegisterPage() {

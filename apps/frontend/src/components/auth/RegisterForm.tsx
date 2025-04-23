@@ -8,8 +8,8 @@ import Link from 'next/link';
 
 import Button from '../ui/button';
 import Input from '../ui/input';
-import authService, { UserCreate } from '../../app/services/auth';
-import { useAuthStore } from '../../app/store/auth';
+import authService, { UserCreate } from '@/services/auth';
+import { useAuthStore } from '@/store/auth';
 
 export default function RegisterForm() {
   const [serverError, setServerError] = useState('');

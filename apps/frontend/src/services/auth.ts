@@ -15,6 +15,8 @@ export interface UserLogin {
 export interface UserResponse {
   id: string;
   email: string;
+  firstname: string;
+  lastname: string;
 }
 
 const authService = {
@@ -43,9 +45,12 @@ const authService = {
   },
 
   getCurrentUser: async (): Promise<UserResponse | null> => {
-    const response = await apiClient.get<UserResponse>('/auth/me');
-
-    return response.data;
+    try {
+      const response = await apiClient.get<UserResponse>('/auth/session');
+      return response.data;
+    } catch (error) {
+      return null;
+    }
   },
 };
 

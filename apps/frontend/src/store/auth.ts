@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { UserResponse } from '../services/auth';
+import { UserResponse } from '@/services/auth';
 
 interface AuthState {
   user: UserResponse | null;
