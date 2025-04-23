@@ -16,6 +16,7 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
+.cursor
 
 # IDE - VSCode
 .vscode/*
@@ -44,3 +45,7 @@ Thumbs.db
 # Next.js
 .next
 out
+
+# Python
+.venv
+__pycache__/

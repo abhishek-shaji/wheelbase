@@ -1,18 +1,27 @@
 {
-  "name": "apps/backend",
+  "name": "backend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/backend/apps/backend",
   "targets": {
-    "dev": {
+    "activate-venv": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "uvicorn app.main:app --reload",
+        "command": "source .venv/bin/activate",
+        "cwd": "apps/backend"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["activate-venv"],
+      "options": {
+        "command": "source .venv/bin/activate && uvicorn app.main:app --reload",
         "cwd": "apps/backend"
       }
     },
     "migrations:generate": {
       "executor": "nx:run-commands",
+      "dependsOn": ["activate-venv"],
       "options": {
         "command": "alembic revision --autogenerate",
         "cwd": "apps/backend"
@@ -20,6 +29,7 @@
     },
     "migrations:migrate": {
       "executor": "nx:run-commands",
+      "dependsOn": ["activate-venv"],
       "options": {
         "command": "alembic upgrade head",
         "cwd": "apps/backend"
