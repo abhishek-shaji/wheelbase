@@ -1,15 +1,8 @@
 'use client';
 
-import {
-  RiMore2Line,
-  RiTimer2Line,
-  RiUserLine,
-  RiPulseLine,
-  RiFindReplaceLine,
-  RiLogoutCircleLine,
-} from '@remixicon/react';
+import { RiMore2Line, RiLogoutCircleLine } from '@remixicon/react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,

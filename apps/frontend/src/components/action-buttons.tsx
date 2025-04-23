@@ -1,18 +1,20 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import DatePicker from "@/components/date-picker";
-import { RiExpandRightLine, RiAddLine } from "@remixicon/react";
-import { useIsMobile } from "@/hooks/use-mobile";
+} from '@/components/ui/tooltip';
+import DatePicker from '@/components/date-picker';
+import { RiExpandRightLine, RiAddLine } from '@remixicon/react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useRouter } from 'next/navigation';
 
 export function ActionButtons() {
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   return (
     <div className="flex gap-3">
@@ -37,7 +39,10 @@ export function ActionButtons() {
       <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button className="aspect-square max-lg:p-0">
+            <Button
+              className="aspect-square max-lg:p-0"
+              onClick={() => router.push('/vehicles/new')}
+            >
               <RiAddLine
                 className="lg:-ms-1 opacity-40 size-5"
                 size={20}
