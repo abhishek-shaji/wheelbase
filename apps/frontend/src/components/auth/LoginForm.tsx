@@ -1,18 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import authService, { UserLogin } from '@/services/auth';
-import { useAuthStore } from '@/store/auth';
 import { Label } from '../ui/label';
+import { useAuth } from '@/context/auth-context';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
@@ -25,9 +22,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
-  const [serverError, setServerError] = useState('');
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
+  const { login } = useAuth();
 
   const {
     register,
@@ -41,37 +37,23 @@ export default function LoginForm() {
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: authService.login,
-    onSuccess: (data) => {
-      setUser(data);
-      router.push('/dashboard');
-    },
-    onError: (error: any) => {
-      setServerError(
-        error.response?.data?.detail || 'Login failed. Please try again.'
-      );
-    },
-  });
-
-  const onSubmit = (data: LoginFormValues) => {
-    setServerError('');
-    loginMutation.mutate(data as UserLogin);
+  const onSubmit = async (data: LoginFormValues) => {
+    return login.mutate(data.email, data.password, () => router.push('/'));
   };
 
   return (
     <div className="rounded-lg p-6 shadow-md">
       <div className="flex w-full flex-col space-y-6">
-        <div className="text-center">
+        <div className="text-left">
           <h1 className="text-2xl font-bold text-white">Login to WheelBase</h1>
           <p className="mt-2 text-gray-400">
             Welcome back! Please sign in to your account.
           </p>
         </div>
 
-        {serverError && (
+        {login.error && (
           <div className="rounded-md bg-red-900/30 border border-red-700 p-4 text-sm text-red-400">
-            {serverError}
+            {login.error}
           </div>
         )}
 
@@ -106,31 +88,19 @@ export default function LoginForm() {
             )}
           </div>
 
-          <div className="text-sm">
-            <Link
-              href="/forgot-password"
-              className="text-blue-400 hover:text-blue-300"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-
           <Button
             type="submit"
-            className="w-full"
-            disabled={loginMutation.isPending}
+            className="w-full mt-3"
+            disabled={login.loading}
           >
-            {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+            {login.loading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
 
         <div className="text-center text-sm">
           <p className="text-gray-400">
             Don&apos;t have an account?{' '}
-            <Link
-              href="/register"
-              className="font-medium text-blue-400 hover:text-blue-300"
-            >
+            <Link href="/register" className="font-medium text-primary">
               Sign up
             </Link>
           </p>
