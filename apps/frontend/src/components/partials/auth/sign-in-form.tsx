@@ -2,26 +2,16 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
 import { useAuth } from '@/context/auth-context';
+import { LoginFormValues, loginSchema } from '@/schemas/auth';
 
-const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-
-export default function LoginForm() {
+const SignInForm = () => {
   const router = useRouter();
   const { login } = useAuth();
 
@@ -100,7 +90,7 @@ export default function LoginForm() {
         <div className="text-center text-sm">
           <p className="text-gray-400">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-medium text-primary">
+            <Link href="/auth/sign-up" className="font-medium text-primary">
               Sign up
             </Link>
           </p>
@@ -108,4 +98,6 @@ export default function LoginForm() {
       </div>
     </div>
   );
-}
+};
+
+export { SignInForm };

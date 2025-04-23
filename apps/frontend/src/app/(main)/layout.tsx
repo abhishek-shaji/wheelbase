@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Experiment 03 - Crafted.is",
-};
-
-import { AppSidebar } from "@/components/app-sidebar";
+'use client';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/auth-context';
+import React, { useEffect } from 'react';
+import { AppSidebar } from '@/components/app-sidebar';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { Separator } from '@/components/ui/separator';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,22 +16,32 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Chart01 } from "@/components/chart-01";
-import { Chart02 } from "@/components/chart-02";
-import { Chart03 } from "@/components/chart-03";
-import { Chart04 } from "@/components/chart-04";
-import { Chart05 } from "@/components/chart-05";
-import { Chart06 } from "@/components/chart-06";
-import { ActionButtons } from "@/components/action-buttons";
+} from '@/components/ui/breadcrumb';
+import { ActionButtons } from '@/components/action-buttons';
+import { Loader2 } from 'lucide-react';
 
-export default function Page() {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+const MainLayout = ({ children }: Readonly<MainLayoutProps>) => {
+  const router = useRouter();
+  const { session } = useAuth();
+
+  useEffect(() => {
+    if (!session?.user && !session.loading && !session.refetching) {
+      router.push('/auth/sign-in');
+    }
+  }, [session, router]);
+
+  if (session.loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -59,19 +73,12 @@ export default function Page() {
               {/* Right side */}
               <ActionButtons />
             </header>
-            <div className="overflow-hidden">
-              <div className="grid auto-rows-min @2xl:grid-cols-2 *:-ms-px *:-mt-px -m-px">
-                <Chart01 />
-                <Chart02 />
-                <Chart03 />
-                <Chart04 />
-                <Chart05 />
-                <Chart06 />
-              </div>
-            </div>
+            <div className="overflow-hidden">{children}</div>
           </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};
+
+export default MainLayout;

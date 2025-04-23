@@ -1,4 +1,5 @@
 import { client } from '@/lib/openapi-fetch';
+import { RegisterFormValues } from '@/schemas/auth';
 import { User } from '@/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createContext, useContext } from 'react';
@@ -6,6 +7,7 @@ import { createContext, useContext } from 'react';
 export const AuthContext = createContext<{
   session: {
     loading: boolean;
+    refetching: boolean;
     error: string | null;
     user: User | null;
   };
@@ -21,7 +23,15 @@ export const AuthContext = createContext<{
   logout: {
     loading: boolean;
     error: string | null;
-    mutate: () => Promise<void>;
+    mutate: (onSuccess?: () => void) => Promise<void>;
+  };
+  register: {
+    loading: boolean;
+    error: string | null;
+    mutate: (
+      values: RegisterFormValues,
+      onSuccess?: () => void
+    ) => Promise<void>;
   };
 } | null>(null);
 
@@ -56,6 +66,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Invalid credentials');
       }
 
+      await session.refetch();
+
+      return data;
+    },
+  });
+
+  const register = useMutation({
+    mutationFn: async (body: RegisterFormValues) => {
+      const registerResponse = await client.POST('/auth/register', {
+        body,
+      });
+
+      if (registerResponse.response.status !== 200) {
+        throw new Error('Failed to register');
+      }
+
+      const { data, response } = await client.POST('/auth/login', {
+        body: { email: body.email, password: body.password },
+      });
+
+      if (response.status !== 200) {
+        throw new Error('Failed to register');
+      }
+
+      await session.refetch();
+
       return data;
     },
   });
@@ -67,6 +103,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.status !== 200) {
         throw new Error('Failed to logout');
       }
+
+      return session.refetch();
     },
   });
 
@@ -75,6 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         session: {
           loading: session.isLoading,
+          refetching: session.isRefetching,
           error: session.error?.message ?? null,
           user: session.data ?? null,
         },
@@ -92,8 +131,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout: {
           loading: logout.isPending,
           error: logout.error?.message ?? null,
-          mutate: async () => {
-            return logout.mutate();
+          mutate: async (onSuccess?: () => void) => {
+            return logout.mutate(undefined, { onSuccess });
+          },
+        },
+        register: {
+          loading: register.isPending,
+          error: register.error?.message ?? null,
+          mutate: async (data: RegisterFormValues, onSuccess?: () => void) => {
+            return register.mutate(data, { onSuccess });
           },
         },
       }}
