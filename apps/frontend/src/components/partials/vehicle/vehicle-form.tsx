@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import React, { useState } from 'react';
 
 import { Button } from '../../ui/button';
@@ -11,9 +11,12 @@ import { VehicleFormValues, vehicleSchema } from '@/schemas/vehicle';
 import { useQuery } from '@tanstack/react-query';
 import { client } from '@/lib/openapi-fetch';
 import { Loader2 } from 'lucide-react';
+import { SchemaVehicleCreate } from '@/types/__generated__/openapi';
 
 const VehicleForm = () => {
   const router = useRouter();
+  const params = useParams<{ organizationId: string }>();
+  const organizationId = params.organizationId;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,8 +33,6 @@ const VehicleForm = () => {
     },
   });
 
-  console.log(brandOptions.data);
-
   const {
     register,
     handleSubmit,
@@ -46,6 +47,7 @@ const VehicleForm = () => {
       is_new: false,
       kms_driven: 0,
       brand_id: '',
+      organization_id: organizationId,
       model: '',
       price: 0,
       first_registration: new Date(),
@@ -54,27 +56,42 @@ const VehicleForm = () => {
 
   const isNew = watch('is_new');
 
-  const onSubmit = async (data: VehicleFormValues) => {
+  const onSubmit = async (formData: VehicleFormValues) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Replace with actual API call
-      const response = await fetch('/api/vehicles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      // Convert date to ISO date string (yyyy-MM-dd) for API
+      const first_registration = formData.first_registration
+        .toISOString()
+        .split('T')[0];
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create vehicle');
+      // Create the vehicle data payload
+      const vehicleData: SchemaVehicleCreate = {
+        ...formData,
+        first_registration,
+      };
+
+      // Make the API call using OpenAPI client
+      const { response, data } = await client.POST(
+        `/organizations/{organization_id}/vehicles/`,
+        {
+          body: vehicleData,
+          params: {
+            path: {
+              organization_id: organizationId,
+            },
+          },
+        }
+      );
+
+      if (response.status !== 201 || !data) {
+        throw new Error('Failed to create vehicle');
       }
 
-      router.push('/vehicles');
+      router.push(`/organization/${organizationId}/vehicles`);
     } catch (err) {
+      console.error('Error creating vehicle:', err);
       setError(
         err instanceof Error ? err.message : 'An unknown error occurred'
       );
@@ -108,6 +125,7 @@ const VehicleForm = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <input type="hidden" {...register('organization_id')} />
           <FormField
             name="is_new"
             label="New Vehicle"

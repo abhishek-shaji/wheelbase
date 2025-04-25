@@ -29,6 +29,9 @@ class VehicleCreate(BaseModel):
     brand_id: UUID4 = Field(
         description="ID of the brand of the vehicle",
     )
+    organization_id: UUID4 = Field(
+        description="ID of the organization the vehicle belongs to",
+    )
     model: str = Field(
         description="Model of the vehicle",
         min_length=1,
@@ -72,6 +75,9 @@ class VehicleResponse(BaseModel):
     brand_id: UUID4 = Field(
         description="ID of the brand of the vehicle",
     )
+    organization_id: UUID4 = Field(
+        description="ID of the organization the vehicle belongs to",
+    )
     model: str = Field(
         description="Model of the vehicle",
         examples=["Corolla"],
@@ -100,6 +106,7 @@ class VehicleResponse(BaseModel):
                 "is_new": False,
                 "kms_driven": 50000,
                 "brand_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "organization_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
                 "model": "Corolla",
                 "price": 25000.50,
                 "first_registration": "2020-01-01",

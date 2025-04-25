@@ -12,6 +12,7 @@ export const vehicleSchema = z.object({
   is_new: z.boolean(),
   kms_driven: z.number().min(0, 'Kilometers driven cannot be negative'),
   brand_id: z.string().uuid('Invalid brand ID'),
+  organization_id: z.string().uuid('Invalid organization ID'),
   model: z
     .string()
     .min(1, 'Model is required')

@@ -17,6 +17,8 @@ class Vehicle(Base):
     kms_driven = Column(Integer, nullable=False)
     brand_id = Column(UUID(as_uuid=True), ForeignKey("brands.id"), nullable=False)
     brand = relationship("Brand", foreign_keys=[brand_id])
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
+    organization = relationship("Organization", foreign_keys=[organization_id])
     model = Column(String, nullable=False)
     price = Column(Float, nullable=False)
     first_registration = Column(Date, nullable=False)

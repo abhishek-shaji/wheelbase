@@ -73,7 +73,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/vehicles/": {
+    "/organizations/{organization_id}/vehicles/": {
         parameters: {
             query?: never;
             header?: never;
@@ -82,22 +82,22 @@ export interface paths {
         };
         /**
          * Vehiclescontroller.Get Vehicles
-         * @description Get a list of vehicles for the current user
+         * @description Get a list of vehicles for the organization
          */
-        get: operations["VehiclesController_get_vehicles_vehicles__get"];
+        get: operations["VehiclesController_get_vehicles_organizations__organization_id__vehicles__get"];
         put?: never;
         /**
          * Vehiclescontroller.Create Vehicle
-         * @description Create a new vehicle
+         * @description Create a new vehicle for the organization
          */
-        post: operations["VehiclesController_create_vehicle_vehicles__post"];
+        post: operations["VehiclesController_create_vehicle_organizations__organization_id__vehicles__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/vehicles/{vehicle_id}": {
+    "/organizations/{organization_id}/vehicles/{vehicle_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -108,18 +108,18 @@ export interface paths {
          * Vehiclescontroller.Get Vehicle
          * @description Get a vehicle by its ID
          */
-        get: operations["VehiclesController_get_vehicle_vehicles__vehicle_id__get"];
+        get: operations["VehiclesController_get_vehicle_organizations__organization_id__vehicles__vehicle_id__get"];
         /**
          * Vehiclescontroller.Update Vehicle
          * @description Update an existing vehicle
          */
-        put: operations["VehiclesController_update_vehicle_vehicles__vehicle_id__put"];
+        put: operations["VehiclesController_update_vehicle_organizations__organization_id__vehicles__vehicle_id__put"];
         post?: never;
         /**
          * Vehiclescontroller.Delete Vehicle
          * @description Delete a vehicle
          */
-        delete: operations["VehiclesController_delete_vehicle_vehicles__vehicle_id__delete"];
+        delete: operations["VehiclesController_delete_vehicle_organizations__organization_id__vehicles__vehicle_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -407,6 +407,12 @@ export interface components {
              */
             brand_id: string;
             /**
+             * Organization Id
+             * Format: uuid4
+             * @description ID of the organization the vehicle belongs to
+             */
+            organization_id: string;
+            /**
              * Model
              * @description Model of the vehicle
              */
@@ -457,6 +463,12 @@ export interface components {
              * @description ID of the brand of the vehicle
              */
             brand_id: string;
+            /**
+             * Organization Id
+             * Format: uuid4
+             * @description ID of the organization the vehicle belongs to
+             */
+            organization_id: string;
             /**
              * Model
              * @description Model of the vehicle
@@ -606,11 +618,13 @@ export interface operations {
             };
         };
     };
-    VehiclesController_get_vehicles_vehicles__get: {
+    VehiclesController_get_vehicles_organizations__organization_id__vehicles__get: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                organization_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -624,13 +638,24 @@ export interface operations {
                     "application/json": components["schemas"]["VehicleResponse"][];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    VehiclesController_create_vehicle_vehicles__post: {
+    VehiclesController_create_vehicle_organizations__organization_id__vehicles__post: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                organization_id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -659,11 +684,12 @@ export interface operations {
             };
         };
     };
-    VehiclesController_get_vehicle_vehicles__vehicle_id__get: {
+    VehiclesController_get_vehicle_organizations__organization_id__vehicles__vehicle_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                organization_id: string;
                 vehicle_id: string;
             };
             cookie?: never;
@@ -690,11 +716,12 @@ export interface operations {
             };
         };
     };
-    VehiclesController_update_vehicle_vehicles__vehicle_id__put: {
+    VehiclesController_update_vehicle_organizations__organization_id__vehicles__vehicle_id__put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                organization_id: string;
                 vehicle_id: string;
             };
             cookie?: never;
@@ -725,11 +752,12 @@ export interface operations {
             };
         };
     };
-    VehiclesController_delete_vehicle_vehicles__vehicle_id__delete: {
+    VehiclesController_delete_vehicle_organizations__organization_id__vehicles__vehicle_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                organization_id: string;
                 vehicle_id: string;
             };
             cookie?: never;

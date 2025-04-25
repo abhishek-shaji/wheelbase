@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.vehicle_model import VehicleCreate, VehicleResponse
-from app.schemas import User, Vehicle, Brand
+from app.schemas import User, Vehicle, Brand, Organization
 from app.database import get_db
 from app.services.base_service import BaseService
 
@@ -14,20 +14,24 @@ class VehiclesService(BaseService):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, current_user: User):
+    def get_all(self, current_user: User, organization_id: UUID):
         vehicles = (
             self.db.query(Vehicle)
-            .filter(Vehicle.created_by_id == current_user.id)
+            .filter(
+                Vehicle.created_by_id == current_user.id,
+                Vehicle.organization_id == organization_id
+            )
             .all()
         )
         return vehicles
 
-    def get_one(self, id: UUID, current_user: User):
+    def get_one(self, id: UUID, organization_id: UUID, current_user: User):
         vehicle = (
             self.db.query(Vehicle)
             .filter(
                 Vehicle.id == id,
                 Vehicle.created_by_id == current_user.id,
+                Vehicle.organization_id == organization_id
             )
             .first()
         )
@@ -38,9 +42,15 @@ class VehiclesService(BaseService):
         return vehicle
 
     def create(self, form_data: VehicleCreate, current_user: User):
+        # Validate brand exists
         brand = self.db.query(Brand).filter(Brand.id == form_data.brand_id).first()
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
+
+        # Validate organization exists
+        organization = self.db.query(Organization).filter(Organization.id == form_data.organization_id).first()
+        if not organization:
+            raise HTTPException(status_code=404, detail="Organization not found")
 
         vehicle = Vehicle(
             registration_number=form_data.registration_number,
@@ -48,6 +58,7 @@ class VehiclesService(BaseService):
             is_new=form_data.is_new,
             kms_driven=form_data.kms_driven,
             brand_id=form_data.brand_id,
+            organization_id=form_data.organization_id,
             model=form_data.model,
             price=form_data.price,
             first_registration=form_data.first_registration,
@@ -60,17 +71,36 @@ class VehiclesService(BaseService):
         return vehicle
 
     def update(self, id: UUID, form_data: VehicleCreate, current_user: User):
+        # Validate brand exists
         brand = self.db.query(Brand).filter(Brand.id == form_data.brand_id).first()
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
 
-        vehicle = self.get_one(id, current_user)
+        # Validate organization exists
+        organization = self.db.query(Organization).filter(Organization.id == form_data.organization_id).first()
+        if not organization:
+            raise HTTPException(status_code=404, detail="Organization not found")
+
+        # Get the vehicle and verify it belongs to the specified organization
+        vehicle = (
+            self.db.query(Vehicle)
+            .filter(
+                Vehicle.id == id,
+                Vehicle.created_by_id == current_user.id,
+                Vehicle.organization_id == form_data.organization_id
+            )
+            .first()
+        )
+
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
 
         vehicle.registration_number = form_data.registration_number
         vehicle.vin_number = form_data.vin_number
         vehicle.is_new = form_data.is_new
         vehicle.kms_driven = form_data.kms_driven
         vehicle.brand_id = form_data.brand_id
+        vehicle.organization_id = form_data.organization_id
         vehicle.model = form_data.model
         vehicle.price = form_data.price
         vehicle.first_registration = form_data.first_registration
@@ -80,8 +110,19 @@ class VehiclesService(BaseService):
         self.db.refresh(vehicle)
         return vehicle
 
-    def delete(self, id: UUID, current_user: User):
-        vehicle = self.get_one(id, current_user)
+    def delete(self, id: UUID, organization_id: UUID, current_user: User):
+        vehicle = (
+            self.db.query(Vehicle)
+            .filter(
+                Vehicle.id == id,
+                Vehicle.created_by_id == current_user.id,
+                Vehicle.organization_id == organization_id
+            )
+            .first()
+        )
+
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
 
         self.db.delete(vehicle)
         self.db.commit()

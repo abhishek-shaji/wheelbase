@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
+import * as React from 'react';
+import Link from 'next/link';
 
-import { NavUser } from "@/components/nav-user";
+import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -15,69 +15,31 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-} from "@/components/ui/sidebar";
-import {
-  RiSlowDownLine,
-  RiLeafLine,
-  RiNavigationLine,
-  RiSpeakLine,
-  RiCodeSSlashLine,
-  RiGeminiLine,
-  RiLinksLine,
-  RiDatabase2Line,
-} from "@remixicon/react";
+} from '@/components/ui/sidebar';
+import { RiSlowDownLine, RiDatabase2Line } from '@remixicon/react';
+import { useParams } from 'next/navigation';
 
 // This is sample data.
 const data = {
   user: {
-    name: "Mark Bannert",
-    email: "mark@bannert.com",
+    name: 'Mark Bannert',
+    email: 'mark@bannert.com',
     avatar:
-      "https://res.cloudinary.com/dlzlfasou/image/upload/v1741345912/user_itiiaq.png",
+      'https://res.cloudinary.com/dlzlfasou/image/upload/v1741345912/user_itiiaq.png',
   },
   navMain: [
     {
-      title: "General",
+      title: 'General',
       items: [
         {
-          title: "Dashboard",
-          url: "#",
+          title: 'Dashboard',
+          url: '#',
           icon: RiSlowDownLine,
           isActive: true,
         },
         {
-          title: "Transactions",
-          url: "#",
-          icon: RiLeafLine,
-        },
-        {
-          title: "Metrics",
-          url: "#",
-          icon: RiNavigationLine,
-        },
-        {
-          title: "Security",
-          url: "#",
-          icon: RiSpeakLine,
-        },
-        {
-          title: "API",
-          url: "#",
-          icon: RiCodeSSlashLine,
-        },
-        {
-          title: "Quick Setup",
-          url: "#",
-          icon: RiGeminiLine,
-        },
-        {
-          title: "Payment Links",
-          url: "#",
-          icon: RiLinksLine,
-        },
-        {
-          title: "Archive",
-          url: "#",
+          title: 'Vehicles',
+          url: '/',
           icon: RiDatabase2Line,
         },
       ],
@@ -124,13 +86,34 @@ function SidebarLogo() {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { organizationId } = useParams<{ organizationId: string }>();
+
+  const navs = [
+    {
+      title: 'General',
+      items: [
+        {
+          title: 'Dashboard',
+          url: '/organization/${organizationId}',
+          icon: RiSlowDownLine,
+          isActive: true,
+        },
+        {
+          title: 'Vehicles',
+          url: `/organization/${organizationId}/vehicles`,
+          icon: RiDatabase2Line,
+        },
+      ],
+    },
+  ];
+
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
       <SidebarHeader className="h-16 max-md:mt-2 mb-2 justify-center">
         <SidebarLogo />
       </SidebarHeader>
       <SidebarContent className="-mt-2">
-        {data.navMain.map((item) => (
+        {navs.map((item) => (
           <SidebarGroup key={item.title}>
             <SidebarGroupLabel className="uppercase text-muted-foreground/65">
               {item.title}
