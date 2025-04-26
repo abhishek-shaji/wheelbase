@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 from app.controllers import auth_controller
 from app.controllers import vehicles_controller
 from app.controllers import organizations_controller
@@ -22,6 +23,7 @@ app.include_router(vehicles_controller.router, tags=["Vehicles"])
 app.include_router(organizations_controller.router, tags=["Organizations"])
 app.include_router(brands_controller.router, tags=["Brands"])
 
+add_pagination(app)
 
 @app.get("/docs", include_in_schema=False)
 async def scalar_html():

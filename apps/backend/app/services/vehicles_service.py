@@ -1,10 +1,13 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
+from sqlalchemy import or_
 
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from fastapi_pagination import Page, paginate
+from fastapi_pagination.utils import disable_installed_extensions_check
 
-from app.models.vehicle_model import VehicleCreate, VehicleResponse
+from app.models.vehicle_model import VehicleCreate, VehicleResponse, VehicleFilter
 from app.schemas import User, Vehicle, Brand, Organization
 from app.database import get_db
 from app.services.base_service import BaseService
@@ -14,16 +17,33 @@ class VehiclesService(BaseService):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, current_user: User, organization_id: UUID):
-        vehicles = (
-            self.db.query(Vehicle)
-            .filter(
-                Vehicle.created_by_id == current_user.id,
-                Vehicle.organization_id == organization_id
-            )
-            .all()
+    def get_all(self, current_user: User, organization_id: UUID, filter_params: VehicleFilter):
+        query = self.db.query(Vehicle).filter(
+            Vehicle.created_by_id == current_user.id,
+            Vehicle.organization_id == organization_id
         )
-        return vehicles
+
+        if filter_params.search:
+            search_term = f"%{filter_params.search}%"
+            query = query.filter(
+                or_(
+                    Vehicle.model.ilike(search_term),
+                    Vehicle.vin_number.ilike(search_term),
+                    Vehicle.registration_number.ilike(search_term)
+                )
+            )
+
+        if filter_params.is_new is not None:
+            query = query.filter(Vehicle.is_new == filter_params.is_new)
+
+        vehicles = query.all()
+
+        vehicle_responses = []
+
+        for vehicle in vehicles:
+            vehicle_responses.append(VehicleResponse.model_validate(vehicle))
+
+        return paginate(vehicle_responses)
 
     def get_one(self, id: UUID, organization_id: UUID, current_user: User):
         vehicle = (
@@ -38,16 +58,14 @@ class VehiclesService(BaseService):
 
         if not vehicle:
             raise HTTPException(status_code=404, detail="Vehicle not found")
-        
+
         return vehicle
 
     def create(self, form_data: VehicleCreate, current_user: User, organization_id: UUID):
-        # Validate brand exists
         brand = self.db.query(Brand).filter(Brand.id == form_data.brand_id).first()
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
 
-        # Validate organization exists
         organization = self.db.query(Organization).filter(Organization.id == organization_id).first()
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
@@ -71,17 +89,14 @@ class VehiclesService(BaseService):
         return vehicle
 
     def update(self, id: UUID, form_data: VehicleCreate, current_user: User, organization_id: UUID):
-        # Validate brand exists
         brand = self.db.query(Brand).filter(Brand.id == form_data.brand_id).first()
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
 
-        # Validate organization exists
         organization = self.db.query(Organization).filter(Organization.id == organization_id).first()
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
 
-        # Get the vehicle and verify it belongs to the specified organization
         vehicle = (
             self.db.query(Vehicle)
             .filter(
@@ -131,4 +146,4 @@ class VehiclesService(BaseService):
 
 
 def get_vehicles_service(db: Session = Depends(get_db)):
-    return VehiclesService(db) 
+    return VehiclesService(db)

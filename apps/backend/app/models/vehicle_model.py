@@ -93,7 +93,7 @@ class VehicleResponse(BaseModel):
     )
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         schema_extra = {
             "description": "Schema for vehicle response data",
             "example": {
@@ -108,4 +108,9 @@ class VehicleResponse(BaseModel):
                 "price": 25000.50,
                 "first_registration": "2020-01-01",
             },
-        } 
+        }
+
+
+class VehicleFilter(BaseModel):
+    search: Optional[str] = Field(default=None)
+    is_new: Optional[bool] = Field(default=None) 

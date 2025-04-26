@@ -80,16 +80,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Vehiclescontroller.Get Vehicles
-         * @description Get a list of vehicles for the organization
-         */
+        /** Vehiclescontroller.Get Vehicles */
         get: operations["VehiclesController_get_vehicles_organizations__organization_id__vehicles__get"];
         put?: never;
-        /**
-         * Vehiclescontroller.Create Vehicle
-         * @description Create a new vehicle for the organization
-         */
+        /** Vehiclescontroller.Create Vehicle */
         post: operations["VehiclesController_create_vehicle_organizations__organization_id__vehicles__post"];
         delete?: never;
         options?: never;
@@ -104,21 +98,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Vehiclescontroller.Get Vehicle
-         * @description Get a vehicle by its ID
-         */
+        /** Vehiclescontroller.Get Vehicle */
         get: operations["VehiclesController_get_vehicle_organizations__organization_id__vehicles__vehicle_id__get"];
-        /**
-         * Vehiclescontroller.Update Vehicle
-         * @description Update an existing vehicle
-         */
+        /** Vehiclescontroller.Update Vehicle */
         put: operations["VehiclesController_update_vehicle_organizations__organization_id__vehicles__vehicle_id__put"];
         post?: never;
-        /**
-         * Vehiclescontroller.Delete Vehicle
-         * @description Delete a vehicle
-         */
+        /** Vehiclescontroller.Delete Vehicle */
         delete: operations["VehiclesController_delete_vehicle_organizations__organization_id__vehicles__vehicle_id__delete"];
         options?: never;
         head?: never;
@@ -305,6 +290,19 @@ export interface components {
              * @description Date and time the organization was created
              */
             created_at: string;
+        };
+        /** Page[VehicleResponse] */
+        Page_VehicleResponse_: {
+            /** Items */
+            items: components["schemas"]["VehicleResponse"][];
+            /** Total */
+            total?: number | null;
+            /** Page */
+            page: number | null;
+            /** Size */
+            size: number | null;
+            /** Pages */
+            pages?: number | null;
         };
         /** UserCreate */
         UserCreate: {
@@ -498,6 +496,7 @@ export type SchemaBrandResponse = components['schemas']['BrandResponse'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
 export type SchemaOrganizationCreate = components['schemas']['OrganizationCreate'];
 export type SchemaOrganizationResponse = components['schemas']['OrganizationResponse'];
+export type SchemaPageVehicleResponse = components['schemas']['Page_VehicleResponse_'];
 export type SchemaUserCreate = components['schemas']['UserCreate'];
 export type SchemaUserLogin = components['schemas']['UserLogin'];
 export type SchemaUserResponse = components['schemas']['UserResponse'];
@@ -614,7 +613,14 @@ export interface operations {
     };
     VehiclesController_get_vehicles_organizations__organization_id__vehicles__get: {
         parameters: {
-            query?: never;
+            query?: {
+                search?: string | null;
+                is_new?: boolean | null;
+                /** @description Page number */
+                page?: number;
+                /** @description Page size */
+                size?: number;
+            };
             header?: never;
             path: {
                 organization_id: string;
@@ -629,7 +635,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VehicleResponse"][];
+                    "application/json": components["schemas"]["Page_VehicleResponse_"];
                 };
             };
             /** @description Validation Error */

@@ -3,8 +3,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
+from fastapi_pagination import Page
 
-from app.models.vehicle_model import VehicleCreate, VehicleResponse
+from app.models.vehicle_model import VehicleCreate, VehicleResponse, VehicleFilter
 from app.schemas import User
 from app.utilities.auth_utility import get_current_user
 from app.services.vehicles_service import VehiclesService, get_vehicles_service
@@ -20,7 +21,6 @@ class VehiclesController:
         "/",
         status_code=201,
         response_model=VehicleResponse,
-        description="Create a new vehicle for the organization",
     )
     def create_vehicle(
         self,
@@ -33,21 +33,20 @@ class VehiclesController:
     @router.get(
         "/",
         status_code=200,
-        response_model=List[VehicleResponse],
-        description="Get a list of vehicles for the organization",
+        response_model=Page[VehicleResponse],
     )
     def get_vehicles(
         self,
         organization_id: UUID,
+        filter_params: VehicleFilter = Depends(),
         current_user: User = Depends(get_current_user),
     ):
-        return self.vehicles_service.get_all(current_user, organization_id)
+        return self.vehicles_service.get_all(current_user, organization_id, filter_params)
 
     @router.get(
         "/{vehicle_id}",
         status_code=200,
         response_model=VehicleResponse,
-        description="Get a vehicle by its ID",
     )
     def get_vehicle(
         self,
@@ -61,7 +60,6 @@ class VehiclesController:
         "/{vehicle_id}",
         status_code=200,
         response_model=VehicleResponse,
-        description="Update an existing vehicle",
     )
     def update_vehicle(
         self,
@@ -75,7 +73,6 @@ class VehiclesController:
     @router.delete(
         "/{vehicle_id}",
         status_code=204,
-        description="Delete a vehicle",
     )
     def delete_vehicle(
         self,

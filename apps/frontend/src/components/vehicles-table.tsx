@@ -25,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Pagination,
   PaginationContent,
@@ -79,6 +78,7 @@ import {
   useRef,
   useState,
   useTransition,
+  useCallback,
 } from 'react';
 import {
   Tooltip,
@@ -92,6 +92,14 @@ import { formatPrice, formatDate } from '@/lib/formatters';
 import { useParams } from 'next/navigation';
 
 type Vehicle = SchemaVehicleResponse;
+
+interface PaginatedVehicleResponse {
+  items: Vehicle[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
 
 const isNewFilterFn: FilterFn<Vehicle> = (
   row,
@@ -259,6 +267,10 @@ export default function VehiclesTable() {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isNewFilter, setIsNewFilter] = useState<boolean[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [sorting, setSorting] = useState<SortingState>([
@@ -277,33 +289,57 @@ export default function VehiclesTable() {
     [data, brands]
   );
 
-  useEffect(() => {
-    async function fetchVehicles() {
-      try {
-        // Fetch vehicles using organization path parameter
-        const { response, data } = await client.GET(
-          '/organizations/{organization_id}/vehicles/',
-          {
-            params: {
-              path: {
-                organization_id: organizationId,
-              },
-            },
-          }
-        );
+  const fetchVehicles = useCallback(async () => {
+    try {
+      setIsLoading(true);
 
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch data');
-        }
+      const queryParams: Record<string, string> = {
+        page: String(pagination.pageIndex + 1), // Convert to 1-based index
+        size: String(pagination.pageSize),
+      };
 
-        setData(data || []);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setIsLoading(false);
+      if (searchTerm) {
+        queryParams.search = searchTerm;
       }
-    }
 
+      if (isNewFilter.length === 1) {
+        queryParams.is_new = String(isNewFilter[0]);
+      }
+
+      const { response, data } = await client.GET(
+        '/organizations/{organization_id}/vehicles/',
+        {
+          params: {
+            path: {
+              organization_id: organizationId,
+            },
+            // @ts-expect-error: Type definition issue with query parameters
+            query: queryParams,
+          },
+        }
+      );
+
+      if (response.status !== 200 || !data) {
+        throw new Error('Failed to fetch data');
+      }
+
+      // Cast the response to our paginated type
+      const paginatedData = data as unknown as PaginatedVehicleResponse;
+      setData(paginatedData.items || []);
+      setTotal(paginatedData.total);
+      setTotalPages(paginatedData.pages);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [organizationId, pagination, searchTerm, isNewFilter]);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
+
+  useEffect(() => {
     async function fetchBrands() {
       try {
         const { response, data } = await client.GET('/brands/');
@@ -323,9 +359,8 @@ export default function VehiclesTable() {
       }
     }
 
-    fetchVehicles();
     fetchBrands();
-  }, [organizationId]);
+  }, []);
 
   const handleDeleteRows = () => {
     const selectedRows = table.getSelectedRowModel().rows;
@@ -344,7 +379,15 @@ export default function VehiclesTable() {
     onSortingChange: setSorting,
     enableSortingRemoval: false,
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        setPagination(updater(pagination));
+      } else {
+        setPagination(updater);
+      }
+    },
+    manualPagination: true, // Tell table we're handling pagination ourselves
+    pageCount: totalPages,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getFilteredRowModel: getFilteredRowModel(),
@@ -357,45 +400,31 @@ export default function VehiclesTable() {
     },
   });
 
-  // Extract complex expressions into separate variables
   const isNewColumn = table.getColumn('is_new');
   const isNewFacetedValues = isNewColumn?.getFacetedUniqueValues();
   const isNewFilterValue = isNewColumn?.getFilterValue();
 
-  // Update useMemo hooks with simplified dependencies
-  const uniqueIsNewValues = useMemo(() => {
-    if (!isNewColumn) return [];
-    const values = Array.from(isNewFacetedValues?.keys() ?? []);
-    return values;
-  }, [isNewColumn, isNewFacetedValues]);
-
-  const isNewCounts = useMemo(() => {
-    if (!isNewColumn) return new Map();
-    return isNewFacetedValues ?? new Map();
-  }, [isNewColumn, isNewFacetedValues]);
-
-  const selectedIsNew = useMemo(() => {
-    return (isNewFilterValue as boolean[]) ?? [];
-  }, [isNewFilterValue]);
-
   const handleIsNewChange = (checked: boolean, value: boolean) => {
-    const filterValue = table
-      .getColumn('is_new')
-      ?.getFilterValue() as boolean[];
-    const newFilterValue = filterValue ? [...filterValue] : [];
-
-    if (checked) {
-      newFilterValue.push(value);
-    } else {
-      const index = newFilterValue.indexOf(value);
-      if (index > -1) {
-        newFilterValue.splice(index, 1);
+    setIsNewFilter((prev) => {
+      if (checked) {
+        return prev.includes(value) ? prev : [...prev, value];
+      } else {
+        return prev.filter((v) => v !== value);
       }
-    }
+    });
+  };
 
-    table
-      .getColumn('is_new')
-      ?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Handle search input clear
+  const handleSearchClear = () => {
+    setSearchTerm('');
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   return (
@@ -404,43 +433,95 @@ export default function VehiclesTable() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Left side */}
         <div className="flex items-center gap-3">
-          {/* Filter by model */}
+          {/* Search input */}
           <div className="relative">
             <Input
               id={`${id}-input`}
               ref={inputRef}
               className={cn(
                 'peer min-w-60 ps-9 bg-background bg-gradient-to-br from-accent/60 to-accent',
-                Boolean(table.getColumn('model')?.getFilterValue()) && 'pe-9'
+                Boolean(searchTerm) && 'pe-9'
               )}
-              value={
-                (table.getColumn('model')?.getFilterValue() ?? '') as string
-              }
-              onChange={(e) =>
-                table.getColumn('model')?.setFilterValue(e.target.value)
-              }
-              placeholder="Search by model"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              placeholder="Search by model, registration, or VIN"
               type="text"
-              aria-label="Search by model"
+              aria-label="Search vehicles"
             />
             <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-muted-foreground/60 peer-disabled:opacity-50">
               <RiSearch2Line size={20} aria-hidden="true" />
             </div>
-            {Boolean(table.getColumn('model')?.getFilterValue()) && (
+            {Boolean(searchTerm) && (
               <button
                 className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/60 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Clear filter"
-                onClick={() => {
-                  table.getColumn('model')?.setFilterValue('');
-                  if (inputRef.current) {
-                    inputRef.current.focus();
-                  }
-                }}
+                aria-label="Clear search"
+                onClick={handleSearchClear}
               >
                 <RiCloseCircleLine size={16} aria-hidden="true" />
               </button>
             )}
           </div>
+
+          {/* Filter dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 text-muted-foreground"
+              >
+                <RiFilter3Line size={16} />
+                Filters
+                {isNewFilter.length > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 rounded-full px-1.5"
+                  >
+                    {isNewFilter.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-56 p-4" sideOffset={-8}>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Vehicle Status</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Checkbox
+                        id="filter-new"
+                        checked={isNewFilter.includes(true)}
+                        onCheckedChange={(checked) =>
+                          handleIsNewChange(!!checked, true)
+                        }
+                      />
+                      <label
+                        htmlFor="filter-new"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        New vehicles
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <Checkbox
+                        id="filter-used"
+                        checked={isNewFilter.includes(false)}
+                        onCheckedChange={(checked) =>
+                          handleIsNewChange(!!checked, false)
+                        }
+                      />
+                      <label
+                        htmlFor="filter-used"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Used vehicles
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         {/* Right side */}
         <div className="flex items-center gap-3">
@@ -491,62 +572,6 @@ export default function VehiclesTable() {
               </AlertDialogContent>
             </AlertDialog>
           )}
-          {/* Filter by status */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline">
-                <RiFilter3Line
-                  className="size-5 -ms-1.5 text-muted-foreground/60"
-                  size={20}
-                  aria-hidden="true"
-                />
-                Filter
-                {selectedIsNew.length > 0 && (
-                  <span className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                    {selectedIsNew.length}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto min-w-36 p-3" align="end">
-              <div className="space-y-3">
-                <div className="text-xs font-medium uppercase text-muted-foreground/60">
-                  Status
-                </div>
-                <div className="space-y-3">
-                  {uniqueIsNewValues.map((value, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`${id}-${i}`}
-                        checked={selectedIsNew.includes(value)}
-                        onCheckedChange={(checked: boolean) =>
-                          handleIsNewChange(checked, value)
-                        }
-                      />
-                      <Label
-                        htmlFor={`${id}-${i}`}
-                        className="flex grow justify-between gap-2 font-normal"
-                      >
-                        {value ? 'New' : 'Used'}{' '}
-                        <span className="ms-2 text-xs text-muted-foreground">
-                          {isNewCounts.get(value)}
-                        </span>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          {/* New filter button */}
-          <Button variant="outline">
-            <RiBardLine
-              className="size-5 -ms-1.5 text-muted-foreground/60"
-              size={20}
-              aria-hidden="true"
-            />
-            New Filter
-          </Button>
         </div>
       </div>
 
@@ -647,17 +672,21 @@ export default function VehiclesTable() {
       </Table>
 
       {/* Pagination */}
-      {table.getRowModel().rows.length > 0 && (
+      {data.length > 0 && (
         <div className="flex items-center justify-between gap-3">
           <p
             className="flex-1 whitespace-nowrap text-sm text-muted-foreground"
             aria-live="polite"
           >
             Page{' '}
-            <span className="text-foreground">
-              {table.getState().pagination.pageIndex + 1}
-            </span>{' '}
-            of <span className="text-foreground">{table.getPageCount()}</span>
+            <span className="text-foreground">{pagination.pageIndex + 1}</span>{' '}
+            of <span className="text-foreground">{totalPages}</span>
+            {total > 0 && (
+              <>
+                {' '}
+                · <span className="text-foreground">{total}</span> vehicles
+              </>
+            )}
           </p>
           <Pagination className="w-auto">
             <PaginationContent className="gap-3">
