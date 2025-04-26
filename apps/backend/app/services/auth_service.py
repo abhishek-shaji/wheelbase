@@ -63,7 +63,7 @@ class AuthService:
             httponly=True,
             secure=True,
             samesite="lax",
-            max_age=1800,
+            max_age=86400,
         )
 
         return db_user
