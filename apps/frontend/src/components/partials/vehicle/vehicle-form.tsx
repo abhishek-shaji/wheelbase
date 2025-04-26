@@ -1,14 +1,14 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Button } from '../../ui/button';
 import { FormField } from '../../ui/form-field';
 import { VehicleFormValues, vehicleSchema } from '@/schemas/vehicle';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { client } from '@/lib/openapi-fetch';
 import { Loader2 } from 'lucide-react';
 import { SchemaVehicleCreate } from '@/types/__generated__/openapi';
@@ -17,8 +17,6 @@ const VehicleForm = () => {
   const router = useRouter();
   const params = useParams<{ organizationId: string }>();
   const organizationId = params.organizationId;
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const brandOptions = useQuery({
     queryKey: ['brands'],
@@ -33,46 +31,17 @@ const VehicleForm = () => {
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-    watch,
-  } = useForm<VehicleFormValues>({
-    resolver: zodResolver(vehicleSchema),
-    defaultValues: {
-      registration_number: '',
-      vin_number: '',
-      is_new: false,
-      kms_driven: 0,
-      brand_id: '',
-      organization_id: organizationId,
-      model: '',
-      price: 0,
-      first_registration: new Date(),
-    },
-  });
-
-  const isNew = watch('is_new');
-
-  const onSubmit = async (formData: VehicleFormValues) => {
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      // Convert date to ISO date string (yyyy-MM-dd) for API
+  const createVehicleMutation = useMutation({
+    mutationFn: async (formData: VehicleFormValues) => {
       const first_registration = formData.first_registration
         .toISOString()
         .split('T')[0];
 
-      // Create the vehicle data payload
       const vehicleData: SchemaVehicleCreate = {
         ...formData,
         first_registration,
       };
 
-      // Make the API call using OpenAPI client
       const { response, data } = await client.POST(
         `/organizations/{organization_id}/vehicles/`,
         {
@@ -89,15 +58,31 @@ const VehicleForm = () => {
         throw new Error('Failed to create vehicle');
       }
 
+      return data;
+    },
+    onSuccess: () => {
       router.push(`/organization/${organizationId}/vehicles`);
-    } catch (err) {
-      console.error('Error creating vehicle:', err);
-      setError(
-        err instanceof Error ? err.message : 'An unknown error occurred'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  const methods = useForm<VehicleFormValues>({
+    resolver: zodResolver(vehicleSchema),
+    defaultValues: {
+      registration_number: '',
+      vin_number: '',
+      is_new: false,
+      kms_driven: 0,
+      brand_id: '',
+      model: '',
+      price: 0,
+      first_registration: new Date(),
+    },
+  });
+
+  const isNew = methods.watch('is_new');
+
+  const onSubmit = (formData: VehicleFormValues) => {
+    createVehicleMutation.mutate(formData);
   };
 
   if (brandOptions.isLoading) {
@@ -118,87 +103,81 @@ const VehicleForm = () => {
           </p>
         </div>
 
-        {error && (
+        {createVehicleMutation.error && (
           <div className="rounded-md bg-red-900/30 border border-red-700 p-4 text-sm text-red-400">
-            {error}
+            {createVehicleMutation.error instanceof Error
+              ? createVehicleMutation.error.message
+              : 'An unknown error occurred'}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <input type="hidden" {...register('organization_id')} />
-          <FormField
-            name="is_new"
-            label="New Vehicle"
-            type="switch"
-            register={register}
-            errors={errors}
-            watch={watch}
-            setValue={setValue}
-          />
-          <FormField
-            name="registration_number"
-            label="Registration Number"
-            placeholder="ABC123"
-            register={register}
-            errors={errors}
-          />
-          <FormField
-            name="vin_number"
-            label="VIN Number"
-            placeholder="1HGCM82633A123456"
-            register={register}
-            errors={errors}
-          />
-          <FormField
-            name="kms_driven"
-            label="Kilometers Driven"
-            type="number"
-            placeholder="50000"
-            register={register}
-            errors={errors}
-            disabled={isNew}
-            defaultValue={isNew ? 0 : undefined}
-          />
-          <FormField
-            name="brand_id"
-            label="Brand"
-            placeholder="Select a brand"
-            register={register}
-            errors={errors}
-            type="select"
-            options={brandOptions.data}
-            watch={watch}
-            setValue={setValue}
-          />
-          <FormField
-            name="model"
-            label="Model"
-            placeholder="Corolla"
-            register={register}
-            errors={errors}
-          />
-          <FormField
-            name="price"
-            label="Price"
-            type="number"
-            placeholder="25000.50"
-            step="0.01"
-            register={register}
-            errors={errors}
-          />
-          <FormField
-            name="first_registration"
-            label="First Registration Date"
-            type="date"
-            watch={watch}
-            setValue={setValue}
-            register={register}
-            errors={errors}
-          />
-          <Button type="submit" className="w-full mt-3" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating vehicle...' : 'Create vehicle'}
-          </Button>
-        </form>
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField<VehicleFormValues>
+              name="is_new"
+              label="New Vehicle"
+              type="switch"
+              disabled={createVehicleMutation.isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="brand_id"
+              label="Brand"
+              placeholder="Select a brand"
+              type="select"
+              options={brandOptions.data}
+              disabled={createVehicleMutation.isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="model"
+              label="Model"
+              placeholder="Corolla"
+              disabled={createVehicleMutation.isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="registration_number"
+              label="Registration Number"
+              placeholder="ABC123"
+              disabled={createVehicleMutation.isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="vin_number"
+              label="VIN Number"
+              placeholder="1HGCM82633A123456"
+              disabled={createVehicleMutation.isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="kms_driven"
+              label="Kilometers Driven"
+              type="number"
+              placeholder="50000"
+              disabled={isNew || createVehicleMutation.isPending}
+              defaultValue={isNew ? 0 : undefined}
+            />
+            <FormField<VehicleFormValues>
+              name="price"
+              label="Price"
+              type="number"
+              placeholder="25000.50"
+              step="0.01"
+              disabled={createVehicleMutation.isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="first_registration"
+              label="First Registration Date"
+              type="date"
+              disabled={createVehicleMutation.isPending}
+            />
+            <Button
+              type="submit"
+              className="w-full mt-3"
+              disabled={createVehicleMutation.isPending}
+            >
+              {createVehicleMutation.isPending
+                ? 'Creating vehicle...'
+                : 'Create vehicle'}
+            </Button>
+          </form>
+        </FormProvider>
       </div>
     </div>
   );

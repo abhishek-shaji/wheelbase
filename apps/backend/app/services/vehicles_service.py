@@ -41,14 +41,14 @@ class VehiclesService(BaseService):
         
         return vehicle
 
-    def create(self, form_data: VehicleCreate, current_user: User):
+    def create(self, form_data: VehicleCreate, current_user: User, organization_id: UUID):
         # Validate brand exists
         brand = self.db.query(Brand).filter(Brand.id == form_data.brand_id).first()
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
 
         # Validate organization exists
-        organization = self.db.query(Organization).filter(Organization.id == form_data.organization_id).first()
+        organization = self.db.query(Organization).filter(Organization.id == organization_id).first()
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -58,7 +58,7 @@ class VehiclesService(BaseService):
             is_new=form_data.is_new,
             kms_driven=form_data.kms_driven,
             brand_id=form_data.brand_id,
-            organization_id=form_data.organization_id,
+            organization_id=organization_id,
             model=form_data.model,
             price=form_data.price,
             first_registration=form_data.first_registration,
@@ -70,14 +70,14 @@ class VehiclesService(BaseService):
 
         return vehicle
 
-    def update(self, id: UUID, form_data: VehicleCreate, current_user: User):
+    def update(self, id: UUID, form_data: VehicleCreate, current_user: User, organization_id: UUID):
         # Validate brand exists
         brand = self.db.query(Brand).filter(Brand.id == form_data.brand_id).first()
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
 
         # Validate organization exists
-        organization = self.db.query(Organization).filter(Organization.id == form_data.organization_id).first()
+        organization = self.db.query(Organization).filter(Organization.id == organization_id).first()
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -87,7 +87,7 @@ class VehiclesService(BaseService):
             .filter(
                 Vehicle.id == id,
                 Vehicle.created_by_id == current_user.id,
-                Vehicle.organization_id == form_data.organization_id
+                Vehicle.organization_id == organization_id
             )
             .first()
         )
@@ -100,7 +100,7 @@ class VehiclesService(BaseService):
         vehicle.is_new = form_data.is_new
         vehicle.kms_driven = form_data.kms_driven
         vehicle.brand_id = form_data.brand_id
-        vehicle.organization_id = form_data.organization_id
+        vehicle.organization_id = organization_id
         vehicle.model = form_data.model
         vehicle.price = form_data.price
         vehicle.first_registration = form_data.first_registration

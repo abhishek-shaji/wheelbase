@@ -28,8 +28,7 @@ class VehiclesController:
         form_data: VehicleCreate,
         current_user: User = Depends(get_current_user),
     ):
-        form_data.organization_id = organization_id
-        return self.vehicles_service.create(form_data, current_user)
+        return self.vehicles_service.create(form_data, current_user, organization_id)
 
     @router.get(
         "/",
@@ -71,8 +70,7 @@ class VehiclesController:
         form_data: VehicleCreate,
         current_user: User = Depends(get_current_user),
     ):
-        form_data.organization_id = organization_id
-        return self.vehicles_service.update(vehicle_id, form_data, current_user)
+        return self.vehicles_service.update(vehicle_id, form_data, current_user, organization_id)
 
     @router.delete(
         "/{vehicle_id}",

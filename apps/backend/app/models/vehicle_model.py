@@ -29,9 +29,6 @@ class VehicleCreate(BaseModel):
     brand_id: UUID4 = Field(
         description="ID of the brand of the vehicle",
     )
-    organization_id: UUID4 = Field(
-        description="ID of the organization the vehicle belongs to",
-    )
     model: str = Field(
         description="Model of the vehicle",
         min_length=1,

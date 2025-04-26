@@ -1,16 +1,8 @@
 import React from 'react';
-import {
-  FieldValues,
-  UseFormRegister,
-  FieldErrors,
-  Path,
-  UseFormWatch,
-  UseFormSetValue,
-} from 'react-hook-form';
+import { FieldValues, useFormContext, Path } from 'react-hook-form';
 
 import { Input } from './input';
 import { Label } from './label';
-import { Calendar } from './calendar';
 import { Switch } from './switch';
 import DateInput from './date-input';
 import {
@@ -38,16 +30,10 @@ interface FormFieldProps<T extends FieldValues> {
     | 'date'
     | 'select';
   placeholder?: string;
-  register: UseFormRegister<T>;
-  errors: FieldErrors<T>;
   disabled?: boolean;
   defaultValue?: string | number;
   step?: string;
   className?: string;
-  // For date inputs
-  watch?: UseFormWatch<T>;
-  setValue?: UseFormSetValue<T>;
-  // For select inputs
   options?: SelectOption[];
 }
 
@@ -56,14 +42,10 @@ export const FormField = <T extends FieldValues>({
   label,
   type = 'text',
   placeholder,
-  register,
-  errors,
   disabled,
   defaultValue,
   step,
   className,
-  watch,
-  setValue,
   options = [],
   ...props
 }: FormFieldProps<T> &
@@ -71,14 +53,11 @@ export const FormField = <T extends FieldValues>({
     React.InputHTMLAttributes<HTMLInputElement>,
     'name' | 'type'
   >): React.ReactElement => {
-  const error = errors[name];
+  const { register, formState, watch, setValue } = useFormContext<T>();
+  const error = formState.errors[name];
   const errorMessage = error?.message as string | undefined;
 
   if (type === 'switch') {
-    if (!setValue || !watch) {
-      throw new Error('setValue and watch are required for switch fields');
-    }
-
     const isChecked = watch(name) as boolean;
 
     return (
@@ -100,16 +79,13 @@ export const FormField = <T extends FieldValues>({
   }
 
   if (type === 'date') {
-    if (!watch || !setValue) {
-      throw new Error('watch and setValue are required for date fields');
-    }
-
     return (
       <div className="space-y-2">
         <Label htmlFor={name}>{label}</Label>
         <DateInput
           {...register(name)}
           className={`mt-1.5 ${className || ''}`}
+          disabled={disabled}
           {...props}
         />
         {error && <p className="text-sm text-red-400">{errorMessage}</p>}
@@ -118,10 +94,6 @@ export const FormField = <T extends FieldValues>({
   }
 
   if (type === 'select') {
-    if (!setValue || !watch) {
-      throw new Error('setValue and watch are required for select fields');
-    }
-
     if (!options) {
       throw new Error('options are required for select fields');
     }

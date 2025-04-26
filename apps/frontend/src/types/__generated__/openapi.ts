@@ -407,12 +407,6 @@ export interface components {
              */
             brand_id: string;
             /**
-             * Organization Id
-             * Format: uuid4
-             * @description ID of the organization the vehicle belongs to
-             */
-            organization_id: string;
-            /**
              * Model
              * @description Model of the vehicle
              */
