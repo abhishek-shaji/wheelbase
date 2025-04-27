@@ -5,8 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useParams } from 'next/navigation';
 import React from 'react';
 
-import { Button } from '../../ui/button';
-import { FormField } from '../../ui/form-field';
+import { Button } from '../../../ui/button';
+import { FormField } from '../../../ui/form-field';
 import { VehicleFormValues, vehicleSchema } from '@/schemas/vehicle';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { client } from '@/lib/openapi-fetch';

@@ -1,1 +1,1 @@
-export * from './vehicle-form';
+export * from './vehicles-form/vehicle-form';
