@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { useState, useTransition } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { client } from '@/lib/openapi-fetch';
 import {
@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { SchemaVehicleResponse } from '@/types';
+import Link from 'next/link';
 
 export type Vehicle = SchemaVehicleResponse;
 
@@ -73,19 +74,28 @@ export const getColumns = ({
   {
     header: 'Brand & Model',
     accessorKey: 'model',
-    cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-          <RiCarLine className="text-primary" size={16} aria-hidden="true" />
-        </div>
-        <div>
-          <div className="font-medium">{row.getValue('model')}</div>
-          <div className="text-xs text-muted-foreground">
-            {brands[row.original.brand_id] || 'Unknown'}
+    cell: ({ row }) => {
+      const organizationId = row.original.organization_id;
+
+      return (
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            <RiCarLine className="text-primary" size={16} aria-hidden="true" />
+          </div>
+          <div>
+            <Link
+              href={`/organization/${organizationId}/vehicles/${row.original.id}/edit`}
+              className="font-medium text-primary hover:underline cursor-pointer"
+            >
+              {row.getValue('model')}
+            </Link>
+            <div className="text-xs text-muted-foreground">
+              {brands[row.original.brand_id] || 'Unknown'}
+            </div>
           </div>
         </div>
-      </div>
-    ),
+      );
+    },
     size: 180,
   },
   {
@@ -191,6 +201,7 @@ function RowActions({
   const [isUpdatePending, startUpdateTransition] = useTransition();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const params = useParams<{ organizationId: string }>();
+  const router = useRouter();
 
   // Toggle is_new status mutation
   const toggleIsNewMutation = useMutation({
@@ -214,6 +225,12 @@ function RowActions({
 
   const handleIsNewToggle = () => {
     toggleIsNewMutation.mutate();
+  };
+
+  const handleEdit = () => {
+    router.push(
+      `/organization/${params.organizationId}/vehicles/${item.id}/edit`
+    );
   };
 
   // Delete vehicle mutation
@@ -268,6 +285,9 @@ function RowActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-auto">
           <DropdownMenuGroup>
+            <DropdownMenuItem onClick={handleEdit} disabled={isUpdatePending}>
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleIsNewToggle}
               disabled={toggleIsNewMutation.isPending || isUpdatePending}

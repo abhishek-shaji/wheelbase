@@ -166,7 +166,7 @@ const VehiclesTable = () => {
     ],
     queryFn: async () => {
       const queryParams: Record<string, string> = {
-        page: String(pageIndex + 1), // Convert to 1-based index
+        page: String(pageIndex + 1),
         size: String(pageSize),
       };
 
@@ -238,8 +238,6 @@ const VehiclesTable = () => {
   const deleteRowsMutation = useMutation({
     mutationFn: async () => {
       const selectedRows = table.getSelectedRowModel().rows;
-      // In a real implementation, this would call an API to delete the vehicles
-      // For now, we're just updating the local state
       return selectedRows.map((row) => row.original.id);
     },
     onSuccess: (deletedIds) => {
@@ -260,7 +258,7 @@ const VehiclesTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
-    manualPagination: true, // Tell table we're handling pagination ourselves
+    manualPagination: true,
     pageCount: totalPages,
     state: {
       pagination,
@@ -277,12 +275,10 @@ const VehiclesTable = () => {
     });
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearchTerm(e.target.value);
   };
 
-  // Handle search input clear
   const handleSearchClear = () => {
     setLocalSearchTerm('');
     if (inputRef.current) {
@@ -558,7 +554,7 @@ const VehiclesTable = () => {
       {/* Pagination */}
       {(data.length > 0 || isLoading) && (
         <div className="flex items-center justify-between gap-3">
-          <p
+          <div
             className="flex-1 whitespace-nowrap text-sm text-muted-foreground"
             aria-live="polite"
           >
@@ -576,7 +572,7 @@ const VehiclesTable = () => {
                 )}
               </>
             )}
-          </p>
+          </div>
           <Pagination className="w-auto">
             <PaginationContent className="gap-3">
               <PaginationItem>
