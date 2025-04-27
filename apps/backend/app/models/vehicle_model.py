@@ -1,7 +1,15 @@
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, Literal
+from enum import Enum
 
 from pydantic import BaseModel, Field, UUID4
+
+
+class FuelType(str, Enum):
+    ELECTRIC = "electric"
+    DIESEL = "diesel"
+    PETROL = "petrol"
+    HYBRID = "hybrid"
 
 
 class VehicleCreate(BaseModel):
@@ -34,6 +42,26 @@ class VehicleCreate(BaseModel):
         min_length=1,
         max_length=50,
         examples=["Corolla"],
+    )
+    model_year: int = Field(
+        description="Year the vehicle model was manufactured",
+        examples=[2022],
+    )
+    fuel_type: FuelType = Field(
+        description="Type of fuel the vehicle uses",
+        examples=["electric"],
+    )
+    color: Optional[str] = Field(
+        default=None,
+        description="Color of the vehicle",
+        max_length=50,
+        examples=["Red"],
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Additional description of the vehicle",
+        max_length=1000,
+        examples=["Well maintained vehicle with all service records available."],
     )
     price: float = Field(
         description="Price of the vehicle",
@@ -79,6 +107,24 @@ class VehicleResponse(BaseModel):
         description="Model of the vehicle",
         examples=["Corolla"],
     )
+    model_year: int = Field(
+        description="Year the vehicle model was manufactured",
+        examples=[2022],
+    )
+    fuel_type: FuelType = Field(
+        description="Type of fuel the vehicle uses",
+        examples=["electric"],
+    )
+    color: Optional[str] = Field(
+        default=None,
+        description="Color of the vehicle",
+        examples=["Red"],
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Additional description of the vehicle",
+        examples=["Well maintained vehicle with all service records available."],
+    )
     price: float = Field(
         description="Price of the vehicle",
         examples=[25000.50],
@@ -105,6 +151,10 @@ class VehicleResponse(BaseModel):
                 "brand_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 "organization_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
                 "model": "Corolla",
+                "model_year": 2022,
+                "fuel_type": "electric",
+                "color": "Red",
+                "description": "Well maintained vehicle with all service records available.",
                 "price": 25000.50,
                 "first_registration": "2020-01-01",
             },

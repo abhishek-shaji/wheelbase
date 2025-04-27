@@ -29,6 +29,10 @@ const VehicleForm = () => {
       kms_driven: 0,
       brand_id: '',
       model: '',
+      model_year: new Date().getFullYear(),
+      fuel_type: 'electric',
+      color: '',
+      description: '',
       price: 0,
       first_registration: new Date(),
     },
@@ -191,6 +195,13 @@ const VehicleForm = () => {
     );
   }
 
+  const fuelTypeOptions = [
+    { value: 'electric', label: 'Electric' },
+    { value: 'diesel', label: 'Diesel' },
+    { value: 'petrol', label: 'Petrol' },
+    { value: 'hybrid', label: 'Hybrid' },
+  ];
+
   return (
     <div className="rounded-lg p-6 shadow-md">
       <div className="flex w-full flex-col space-y-6">
@@ -236,6 +247,26 @@ const VehicleForm = () => {
               disabled={isPending}
             />
             <FormField<VehicleFormValues>
+              name="description"
+              label="Description (Optional)"
+              type="textarea"
+              placeholder="Add details about the vehicle condition, features, etc."
+              disabled={isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="model_year"
+              label="Model Year"
+              type="number"
+              disabled={isPending}
+            />
+            <FormField<VehicleFormValues>
+              name="fuel_type"
+              label="Fuel Type"
+              type="select"
+              options={fuelTypeOptions}
+              disabled={isPending}
+            />
+            <FormField<VehicleFormValues>
               name="registration_number"
               label="Registration Number"
               placeholder="ABC123"
@@ -254,6 +285,12 @@ const VehicleForm = () => {
               placeholder="50000"
               disabled={isNew || isPending}
               defaultValue={isNew ? 0 : undefined}
+            />
+            <FormField<VehicleFormValues>
+              name="color"
+              label="Color (Optional)"
+              placeholder="Red"
+              disabled={isPending}
             />
             <FormField<VehicleFormValues>
               name="price"

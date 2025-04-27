@@ -20,6 +20,10 @@ class Vehicle(Base):
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
     organization = relationship("Organization", foreign_keys=[organization_id])
     model = Column(String, nullable=False)
+    model_year = Column(Integer, nullable=False)
+    fuel_type = Column(String, nullable=False)
+    color = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     price = Column(Float, nullable=False)
     first_registration = Column(Date, nullable=False)
 

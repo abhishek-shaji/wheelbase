@@ -78,6 +78,10 @@ class VehiclesService(BaseService):
             brand_id=form_data.brand_id,
             organization_id=organization_id,
             model=form_data.model,
+            model_year=form_data.model_year,
+            fuel_type=form_data.fuel_type.value,
+            color=form_data.color,
+            description=form_data.description,
             price=form_data.price,
             first_registration=form_data.first_registration,
             created_by_id=current_user.id,
@@ -117,6 +121,10 @@ class VehiclesService(BaseService):
         vehicle.brand_id = form_data.brand_id
         vehicle.organization_id = organization_id
         vehicle.model = form_data.model
+        vehicle.model_year = form_data.model_year
+        vehicle.fuel_type = form_data.fuel_type.value
+        vehicle.color = form_data.color
+        vehicle.description = form_data.description
         vehicle.price = form_data.price
         vehicle.first_registration = form_data.first_registration
         vehicle.updated_by_id = current_user.id

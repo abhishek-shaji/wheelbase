@@ -5,6 +5,7 @@ import { Input } from './input';
 import { Label } from './label';
 import { Switch } from './switch';
 import DateInput from './date-input';
+import { Textarea } from './textarea';
 import {
   Select,
   SelectContent,
@@ -28,7 +29,8 @@ interface FormFieldProps<T extends FieldValues> {
     | 'number'
     | 'switch'
     | 'date'
-    | 'select';
+    | 'select'
+    | 'textarea';
   placeholder?: string;
   disabled?: boolean;
   defaultValue?: string | number;
@@ -94,6 +96,7 @@ export const FormField = <T extends FieldValues>({
   }
 
   if (type === 'select') {
+    console.log('options', options);
     if (!options) {
       throw new Error('options are required for select fields');
     }
@@ -121,6 +124,25 @@ export const FormField = <T extends FieldValues>({
             ))}
           </SelectContent>
         </Select>
+        {error && <p className="text-sm text-red-400">{errorMessage}</p>}
+      </div>
+    );
+  }
+
+  if (type === 'textarea') {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={name}>{label}</Label>
+        <Textarea
+          id={name}
+          placeholder={placeholder}
+          {...(register(name) as any)}
+          value={watch(name) as string}
+          onChange={(e) => setValue(name, e.target.value as any)}
+          aria-invalid={error ? 'true' : 'false'}
+          className={`mt-1.5 ${className || ''}`}
+          disabled={disabled}
+        />
         {error && <p className="text-sm text-red-400">{errorMessage}</p>}
       </div>
     );

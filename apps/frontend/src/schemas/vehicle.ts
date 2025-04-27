@@ -16,6 +16,18 @@ export const vehicleSchema = z.object({
     .string()
     .min(1, 'Model is required')
     .max(50, 'Model must be at most 50 characters'),
+  model_year: z.number().int().min(1900, 'Model year must be 1900 or later'),
+  fuel_type: z.enum(['electric', 'diesel', 'petrol', 'hybrid']),
+  color: z
+    .string()
+    .max(50, 'Color must be at most 50 characters')
+    .optional()
+    .nullable(),
+  description: z
+    .string()
+    .max(1000, 'Description must be at most 1000 characters')
+    .optional()
+    .nullable(),
   price: z.number().gt(0, 'Price must be greater than 0'),
   first_registration: z.date(),
 });
