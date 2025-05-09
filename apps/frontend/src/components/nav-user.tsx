@@ -17,15 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/context/auth-context';
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser() {
   const { session, logout } = useAuth();
   const { isMobile } = useSidebar();
 

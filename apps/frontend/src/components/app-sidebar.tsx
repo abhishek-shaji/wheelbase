@@ -17,35 +17,7 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { RiSlowDownLine, RiDatabase2Line, RiUserLine } from '@remixicon/react';
-import { useParams } from 'next/navigation';
-
-// This is sample data.
-const data = {
-  user: {
-    name: 'Mark Bannert',
-    email: 'mark@bannert.com',
-    avatar:
-      'https://res.cloudinary.com/dlzlfasou/image/upload/v1741345912/user_itiiaq.png',
-  },
-  navMain: [
-    {
-      title: 'General',
-      items: [
-        {
-          title: 'Dashboard',
-          url: '#',
-          icon: RiSlowDownLine,
-          isActive: true,
-        },
-        {
-          title: 'Vehicles',
-          url: '/',
-          icon: RiDatabase2Line,
-        },
-      ],
-    },
-  ],
-};
+import { useParams, usePathname } from 'next/navigation';
 
 function SidebarLogo() {
   const id = React.useId();
@@ -87,6 +59,7 @@ function SidebarLogo() {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { organizationId } = useParams<{ organizationId: string }>();
+  const pathname = usePathname();
 
   const navs = [
     {
@@ -96,7 +69,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: 'Dashboard',
           url: `/organization/${organizationId}`,
           icon: RiSlowDownLine,
-          isActive: true,
         },
         {
           title: 'Vehicles',
@@ -125,34 +97,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {item.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      className="group/menu-button group-data-[collapsible=icon]:px-[5px]! font-medium gap-3 h-9 [&>svg]:size-auto"
-                      tooltip={item.title}
-                      isActive={item.isActive}
-                    >
-                      <a href={item.url}>
-                        {item.icon && (
-                          <item.icon
-                            className="text-muted-foreground/65 group-data-[active=true]/menu-button:text-primary"
-                            size={22}
-                            aria-hidden="true"
-                          />
-                        )}
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {item.items.map((item) => {
+                  const isActive =
+                    pathname === item.url ||
+                    (pathname.startsWith(`${item.url}/`) &&
+                      item.url !== `/organization/${organizationId}`);
+
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        className="group/menu-button group-data-[collapsible=icon]:px-[5px]! font-medium gap-3 h-9 [&>svg]:size-auto"
+                        tooltip={item.title}
+                        isActive={isActive}
+                      >
+                        <Link href={item.url}>
+                          {item.icon && (
+                            <item.icon
+                              className="text-muted-foreground/65 group-data-[active=true]/menu-button:text-primary"
+                              size={22}
+                              aria-hidden="true"
+                            />
+                          )}
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
