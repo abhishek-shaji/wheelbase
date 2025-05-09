@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from enum import Enum
 
 from pydantic import BaseModel, Field, UUID4
@@ -182,5 +182,5 @@ class VehicleResponse(BaseModel):
 
 class VehicleFilter(BaseModel):
     search: Optional[str] = Field(default=None)
-    is_new: Optional[bool] = Field(default=None)
-    is_sold: Optional[bool] = Field(default=None) 
+    is_new: Optional[str] = Field(default=None)
+    is_sold: Optional[str] = Field(default=None) 

@@ -34,13 +34,37 @@ class VehiclesService(BaseService):
                 )
             )
 
-        if filter_params.is_new is not None:
-            query = query.filter(Vehicle.is_new == filter_params.is_new)
+        if filter_params.is_new is not None and filter_params.is_new:
+            # Parse comma-separated values into a list of booleans
+            is_new_values = []
+            for val in filter_params.is_new.split(','):
+                val = val.lower().strip()
+                if val == 'true':
+                    is_new_values.append(True)
+                elif val == 'false':
+                    is_new_values.append(False)
             
-        if filter_params.is_sold is not None:
-            if filter_params.is_sold:
+            if is_new_values:
+                query = query.filter(Vehicle.is_new.in_(is_new_values))
+            
+        if filter_params.is_sold is not None and filter_params.is_sold:
+            # Parse comma-separated values into a list of booleans
+            is_sold_values = []
+            for val in filter_params.is_sold.split(','):
+                val = val.lower().strip()
+                if val == 'true':
+                    is_sold_values.append(True)
+                elif val == 'false':
+                    is_sold_values.append(False)
+            
+            if True in is_sold_values and False in is_sold_values:
+                # Both sold and unsold are selected, no filtering needed
+                pass
+            elif True in is_sold_values:
+                # Only sold vehicles
                 query = query.filter(Vehicle.sold_to_id != None)
-            else:
+            elif False in is_sold_values:
+                # Only unsold vehicles
                 query = query.filter(Vehicle.sold_to_id == None)
 
         vehicles = query.all()

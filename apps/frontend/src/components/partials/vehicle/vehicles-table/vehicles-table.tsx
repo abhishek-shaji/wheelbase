@@ -213,15 +213,11 @@ const VehiclesTable = () => {
       }
 
       if (isNewFilter.length > 0) {
-        isNewFilter.forEach((value, index) => {
-          queryParams[`is_new[${index}]`] = value.toString();
-        });
+        queryParams['is_new'] = isNewFilter.join(',');
       }
 
       if (isSoldFilter.length > 0) {
-        isSoldFilter.forEach((value, index) => {
-          queryParams[`is_sold[${index}]`] = value.toString();
-        });
+        queryParams['is_sold'] = isSoldFilter.join(',');
       }
 
       const { response, data } = await client.GET(
