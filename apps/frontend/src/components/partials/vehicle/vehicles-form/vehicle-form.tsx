@@ -187,7 +187,11 @@ const VehicleForm = () => {
     }
   };
 
-  if (brandOptions.isLoading || (isEditing && vehicleQuery.isLoading)) {
+  if (
+    brandOptions.isLoading ||
+    !brandOptions.data ||
+    (isEditing && vehicleQuery.isLoading)
+  ) {
     return (
       <div className="h-screen w-full flex items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />

@@ -36,13 +36,12 @@ class BrandsController:
         "/",
         status_code=200,
         response_model=List[BrandResponse],
-        description="Get a list of brands for the current user",
+        description="Get a list of brands",
     )
     def get_brands(
         self,
-        current_user: User = Depends(get_current_user),
     ):
-        return self.brand_service.get_all(current_user)
+        return self.brand_service.get_all()
 
     @router.get(
         "/{brand_id}",

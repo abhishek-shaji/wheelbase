@@ -214,6 +214,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizations/{organization_id}/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customerscontroller.Get Customers
+         * @description Get a list of customers for an organization
+         */
+        get: operations["CustomersController_get_customers_organizations__organization_id__customers_get"];
+        put?: never;
+        /**
+         * Customerscontroller.Create Customer
+         * @description Create a new customer for an organization
+         */
+        post: operations["CustomersController_create_customer_organizations__organization_id__customers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization_id}/customers/{customer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customerscontroller.Get Customer
+         * @description Get a customer by its ID
+         */
+        get: operations["CustomersController_get_customer_organizations__organization_id__customers__customer_id__get"];
+        /**
+         * Customerscontroller.Update Customer
+         * @description Update an existing customer
+         */
+        put: operations["CustomersController_update_customer_organizations__organization_id__customers__customer_id__put"];
+        post?: never;
+        /**
+         * Customerscontroller.Delete Customer
+         * @description Delete a customer
+         */
+        delete: operations["CustomersController_delete_customer_organizations__organization_id__customers__customer_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -246,6 +298,77 @@ export interface components {
              */
             created_at: string;
         };
+        /** CustomerCreate */
+        CustomerCreate: {
+            /**
+             * First Name
+             * @description Customer's first name
+             */
+            first_name: string;
+            /**
+             * Last Name
+             * @description Customer's last name
+             */
+            last_name: string;
+            /**
+             * Email
+             * Format: email
+             * @description Customer's email address
+             */
+            email: string;
+            /**
+             * Phone
+             * @description Customer's phone number
+             */
+            phone: string;
+        };
+        /** CustomerResponse */
+        CustomerResponse: {
+            /**
+             * Id
+             * Format: uuid4
+             * @description Unique identifier for the customer
+             */
+            id: string;
+            /**
+             * First Name
+             * @description Customer's first name
+             */
+            first_name: string;
+            /**
+             * Last Name
+             * @description Customer's last name
+             */
+            last_name: string;
+            /**
+             * Email
+             * Format: email
+             * @description Customer's email address
+             */
+            email: string;
+            /**
+             * Phone
+             * @description Customer's phone number
+             */
+            phone: string;
+            /**
+             * Organization Id
+             * Format: uuid4
+             * @description ID of the organization the customer belongs to
+             */
+            organization_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             * @description Date and time the customer was created
+             */
+            created_at: string;
+        };
+        /**
+         * FuelType
+         * @enum {string}
+         */
+        FuelType: "electric" | "diesel" | "petrol" | "hybrid";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -410,6 +533,23 @@ export interface components {
              */
             model: string;
             /**
+             * Model Year
+             * @description Year the vehicle model was manufactured
+             */
+            model_year: number;
+            /** @description Type of fuel the vehicle uses */
+            fuel_type: components["schemas"]["FuelType"];
+            /**
+             * Color
+             * @description Color of the vehicle
+             */
+            color?: string | null;
+            /**
+             * Description
+             * @description Additional description of the vehicle
+             */
+            description?: string | null;
+            /**
              * Price
              * @description Price of the vehicle
              */
@@ -467,6 +607,23 @@ export interface components {
              */
             model: string;
             /**
+             * Model Year
+             * @description Year the vehicle model was manufactured
+             */
+            model_year: number;
+            /** @description Type of fuel the vehicle uses */
+            fuel_type: components["schemas"]["FuelType"];
+            /**
+             * Color
+             * @description Color of the vehicle
+             */
+            color?: string | null;
+            /**
+             * Description
+             * @description Additional description of the vehicle
+             */
+            description?: string | null;
+            /**
              * Price
              * @description Price of the vehicle
              */
@@ -493,6 +650,9 @@ export interface components {
 }
 export type SchemaBrandCreate = components['schemas']['BrandCreate'];
 export type SchemaBrandResponse = components['schemas']['BrandResponse'];
+export type SchemaCustomerCreate = components['schemas']['CustomerCreate'];
+export type SchemaCustomerResponse = components['schemas']['CustomerResponse'];
+export type SchemaFuelType = components['schemas']['FuelType'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
 export type SchemaOrganizationCreate = components['schemas']['OrganizationCreate'];
 export type SchemaOrganizationResponse = components['schemas']['OrganizationResponse'];
@@ -1055,6 +1215,173 @@ export interface operations {
             header?: never;
             path: {
                 brand_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    CustomersController_get_customers_organizations__organization_id__customers_get: {
+        parameters: {
+            query?: {
+                /** @description Search term for filtering customers */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    CustomersController_create_customer_organizations__organization_id__customers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    CustomersController_get_customer_organizations__organization_id__customers__customer_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    CustomersController_update_customer_organizations__organization_id__customers__customer_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    CustomersController_delete_customer_organizations__organization_id__customers__customer_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                customer_id: string;
             };
             cookie?: never;
         };

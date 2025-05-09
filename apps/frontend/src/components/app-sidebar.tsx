@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { RiSlowDownLine, RiDatabase2Line } from '@remixicon/react';
+import { RiSlowDownLine, RiDatabase2Line, RiUserLine } from '@remixicon/react';
 import { useParams } from 'next/navigation';
 
 // This is sample data.
@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: [
         {
           title: 'Dashboard',
-          url: '/organization/${organizationId}',
+          url: `/organization/${organizationId}`,
           icon: RiSlowDownLine,
           isActive: true,
         },
@@ -102,6 +102,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: 'Vehicles',
           url: `/organization/${organizationId}/vehicles`,
           icon: RiDatabase2Line,
+        },
+        {
+          title: 'Customers',
+          url: `/organization/${organizationId}/customers`,
+          icon: RiUserLine,
         },
       ],
     },

@@ -13,9 +13,9 @@ class BrandService(BaseService):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, current_user: User):
+    def get_all(self):
         brands = (
-            self.db.query(Brand).filter(Brand.created_by_id == current_user.id).all()
+            self.db.query(Brand).all()
         )
 
         return brands
@@ -25,7 +25,7 @@ class BrandService(BaseService):
 
         if not brand:
             raise HTTPException(status_code=404, detail="Brand not found")
-        
+
         return brand
 
     def create(self, form_data: BrandCreate, current_user: User):
@@ -42,7 +42,7 @@ class BrandService(BaseService):
 
     def update(self, id: UUID, data: BrandCreate, current_user: User):
         brand = self.get_one(id, current_user)
-        
+
         brand.name = data.name
         self.db.commit()
         self.db.refresh(brand)
@@ -51,7 +51,7 @@ class BrandService(BaseService):
 
     def delete(self, id: UUID, current_user: User):
         brand = self.get_one(id, current_user)
-        
+
         self.db.delete(brand)
         self.db.commit()
 
