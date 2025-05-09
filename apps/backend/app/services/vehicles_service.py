@@ -1,14 +1,15 @@
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy import or_
+from datetime import datetime
 
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.utils import disable_installed_extensions_check
 
-from app.models.vehicle_model import VehicleCreate, VehicleResponse, VehicleFilter
-from app.schemas import User, Vehicle, Brand, Organization
+from app.models.vehicle_model import VehicleCreate, VehicleResponse, VehicleFilter, VehicleMarkAsSold
+from app.schemas import User, Vehicle, Brand, Organization, Customer
 from app.database import get_db
 from app.services.base_service import BaseService
 
@@ -35,6 +36,12 @@ class VehiclesService(BaseService):
 
         if filter_params.is_new is not None:
             query = query.filter(Vehicle.is_new == filter_params.is_new)
+            
+        if filter_params.is_sold is not None:
+            if filter_params.is_sold:
+                query = query.filter(Vehicle.sold_to_id != None)
+            else:
+                query = query.filter(Vehicle.sold_to_id == None)
 
         vehicles = query.all()
 
@@ -127,6 +134,63 @@ class VehiclesService(BaseService):
         vehicle.description = form_data.description
         vehicle.price = form_data.price
         vehicle.first_registration = form_data.first_registration
+        vehicle.updated_by_id = current_user.id
+
+        self.db.commit()
+        self.db.refresh(vehicle)
+        return vehicle
+        
+    def mark_as_sold(self, id: UUID, form_data: VehicleMarkAsSold, current_user: User, organization_id: UUID):
+        # Validate customer exists
+        customer = self.db.query(Customer).filter(
+            Customer.id == form_data.sold_to_id,
+            Customer.organization_id == organization_id
+        ).first()
+        
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+            
+        # Get vehicle
+        vehicle = (
+            self.db.query(Vehicle)
+            .filter(
+                Vehicle.id == id,
+                Vehicle.created_by_id == current_user.id,
+                Vehicle.organization_id == organization_id
+            )
+            .first()
+        )
+
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+            
+        # Mark as sold
+        vehicle.sold_to_id = form_data.sold_to_id
+        vehicle.sold_at = datetime.now()
+        vehicle.updated_by_id = current_user.id
+
+        self.db.commit()
+        self.db.refresh(vehicle)
+        return vehicle
+        
+    def mark_as_unsold(self, id: UUID, current_user: User, organization_id: UUID):
+        # Get vehicle
+        vehicle = (
+            self.db.query(Vehicle)
+            .filter(
+                Vehicle.id == id,
+                Vehicle.created_by_id == current_user.id,
+                Vehicle.organization_id == organization_id
+            )
+            .first()
+        )
+
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+            
+        # Mark as unsold
+        vehicle.sold_to_id = None
+        vehicle.sold_at = None
         vehicle.updated_by_id = current_user.id
 
         self.db.commit()

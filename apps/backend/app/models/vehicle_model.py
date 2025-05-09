@@ -77,6 +77,15 @@ class VehicleCreate(BaseModel):
         schema_extra = {"description": "Schema for creating a new vehicle"}
 
 
+class VehicleMarkAsSold(BaseModel):
+    sold_to_id: UUID4 = Field(
+        description="ID of the customer the vehicle is sold to"
+    )
+    
+    class Config:
+        schema_extra = {"description": "Schema for marking a vehicle as sold to a customer"}
+
+
 class VehicleResponse(BaseModel):
     id: UUID4 = Field(
         description="Unique identifier for the vehicle", examples=[1]
@@ -92,6 +101,14 @@ class VehicleResponse(BaseModel):
     is_new: bool = Field(
         description="Whether the vehicle is new or used",
         examples=[False],
+    )
+    sold_to_id: Optional[UUID4] = Field(
+        description="ID of the customer the vehicle is sold to",
+        default=None,
+    )
+    sold_at: Optional[datetime] = Field(
+        description="Date and time when the vehicle was sold",
+        default=None,
     )
     kms_driven: int = Field(
         description="Kilometers driven by the vehicle",
@@ -147,6 +164,8 @@ class VehicleResponse(BaseModel):
                 "registration_number": "ABC123",
                 "vin_number": "1HGCM82633A123456",
                 "is_new": False,
+                "sold_to_id": None,
+                "sold_at": None,
                 "kms_driven": 50000,
                 "brand_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 "organization_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
@@ -163,4 +182,5 @@ class VehicleResponse(BaseModel):
 
 class VehicleFilter(BaseModel):
     search: Optional[str] = Field(default=None)
-    is_new: Optional[bool] = Field(default=None) 
+    is_new: Optional[bool] = Field(default=None)
+    is_sold: Optional[bool] = Field(default=None) 

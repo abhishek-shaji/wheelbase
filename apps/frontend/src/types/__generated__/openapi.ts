@@ -110,6 +110,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizations/{organization_id}/vehicles/{vehicle_id}/mark-as-sold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vehiclescontroller.Mark Vehicle As Sold */
+        post: operations["VehiclesController_mark_vehicle_as_sold_organizations__organization_id__vehicles__vehicle_id__mark_as_sold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizations/{organization_id}/vehicles/{vehicle_id}/mark-as-unsold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vehiclescontroller.Mark Vehicle As Unsold */
+        post: operations["VehiclesController_mark_vehicle_as_unsold_organizations__organization_id__vehicles__vehicle_id__mark_as_unsold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/organizations/": {
         parameters: {
             query?: never;
@@ -171,7 +205,7 @@ export interface paths {
         };
         /**
          * Brandscontroller.Get Brands
-         * @description Get a list of brands for the current user
+         * @description Get a list of brands
          */
         get: operations["BrandsController_get_brands_brands__get"];
         put?: never;
@@ -561,6 +595,15 @@ export interface components {
              */
             first_registration: string;
         };
+        /** VehicleMarkAsSold */
+        VehicleMarkAsSold: {
+            /**
+             * Sold To Id
+             * Format: uuid4
+             * @description ID of the customer the vehicle is sold to
+             */
+            sold_to_id: string;
+        };
         /** VehicleResponse */
         VehicleResponse: {
             /**
@@ -584,6 +627,16 @@ export interface components {
              * @description Whether the vehicle is new or used
              */
             is_new: boolean;
+            /**
+             * Sold To Id
+             * @description ID of the customer the vehicle is sold to
+             */
+            sold_to_id?: string | null;
+            /**
+             * Sold At
+             * @description Date and time when the vehicle was sold
+             */
+            sold_at?: string | null;
             /**
              * Kms Driven
              * @description Kilometers driven by the vehicle
@@ -662,6 +715,7 @@ export type SchemaUserLogin = components['schemas']['UserLogin'];
 export type SchemaUserResponse = components['schemas']['UserResponse'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaVehicleCreate = components['schemas']['VehicleCreate'];
+export type SchemaVehicleMarkAsSold = components['schemas']['VehicleMarkAsSold'];
 export type SchemaVehicleResponse = components['schemas']['VehicleResponse'];
 export type $defs = Record<string, never>;
 export interface operations {
@@ -776,6 +830,7 @@ export interface operations {
             query?: {
                 search?: string | null;
                 is_new?: boolean | null;
+                is_sold?: boolean | null;
                 /** @description Page number */
                 page?: number;
                 /** @description Page size */
@@ -930,6 +985,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    VehiclesController_mark_vehicle_as_sold_organizations__organization_id__vehicles__vehicle_id__mark_as_sold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                vehicle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VehicleMarkAsSold"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    VehiclesController_mark_vehicle_as_unsold_organizations__organization_id__vehicles__vehicle_id__mark_as_unsold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+                vehicle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleResponse"];
+                };
             };
             /** @description Validation Error */
             422: {

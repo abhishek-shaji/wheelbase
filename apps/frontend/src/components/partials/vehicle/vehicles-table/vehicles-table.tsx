@@ -70,6 +70,7 @@ import { useDebounce } from 'use-debounce';
 import {
   getColumns,
   Vehicle,
+  Customer,
 } from '@/components/partials/vehicle/vehicles-table/columns';
 
 interface PaginatedVehicleResponse {
@@ -131,6 +132,11 @@ const VehiclesTable = () => {
     parseAsArrayOf(parseAsBoolean).withDefault([])
   );
 
+  const [isSoldFilter, setIsSoldFilter] = useQueryState(
+    'isSold',
+    parseAsArrayOf(parseAsBoolean).withDefault([])
+  );
+
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -153,7 +159,37 @@ const VehiclesTable = () => {
     },
   });
 
+  const customersQuery = useQuery({
+    queryKey: ['customers', organizationId],
+    queryFn: async () => {
+      const { response, data } = await client.GET(
+        '/organizations/{organization_id}/customers',
+        {
+          params: {
+            path: {
+              organization_id: organizationId,
+            },
+          },
+        }
+      );
+
+      if (response.status !== 200 || !data) {
+        throw new Error('Failed to fetch customers');
+      }
+
+      const customerMap: Record<string, string> = {};
+      data.forEach((customer: Customer) => {
+        customerMap[
+          customer.id
+        ] = `${customer.first_name} ${customer.last_name}`;
+      });
+
+      return customerMap;
+    },
+  });
+
   const brands = brandsQuery.data || {};
+  const customers = customersQuery.data || {};
 
   const vehiclesQuery = useQuery({
     queryKey: [
@@ -163,19 +199,29 @@ const VehiclesTable = () => {
       pageSize,
       searchTerm,
       isNewFilter,
+      isSoldFilter,
     ],
+    refetchOnMount: 'always',
     queryFn: async () => {
       const queryParams: Record<string, string> = {
-        page: String(pageIndex + 1),
-        size: String(pageSize),
+        page: (pageIndex + 1).toString(),
+        size: pageSize.toString(),
       };
 
       if (searchTerm) {
         queryParams.search = searchTerm;
       }
 
-      if (isNewFilter.length === 1) {
-        queryParams.is_new = String(isNewFilter[0]);
+      if (isNewFilter.length > 0) {
+        isNewFilter.forEach((value, index) => {
+          queryParams[`is_new[${index}]`] = value.toString();
+        });
+      }
+
+      if (isSoldFilter.length > 0) {
+        isSoldFilter.forEach((value, index) => {
+          queryParams[`is_sold[${index}]`] = value.toString();
+        });
       }
 
       const { response, data } = await client.GET(
@@ -215,6 +261,7 @@ const VehiclesTable = () => {
           pageSize,
           searchTerm,
           isNewFilter,
+          isSoldFilter,
         ],
         typeof newData === 'function' ? newData(data) : newData
       );
@@ -227,12 +274,13 @@ const VehiclesTable = () => {
       pageSize,
       searchTerm,
       isNewFilter,
+      isSoldFilter,
     ]
   );
 
   const columns = useMemo(
-    () => getColumns({ data, setData, brands }),
-    [data, setData, brands]
+    () => getColumns({ data, setData, brands, customers }),
+    [data, setData, brands, customers]
   );
 
   const deleteRowsMutation = useMutation({
@@ -267,6 +315,16 @@ const VehiclesTable = () => {
 
   const handleIsNewChange = (checked: boolean, value: boolean) => {
     setIsNewFilter((prev) => {
+      if (checked) {
+        return prev.includes(value) ? prev : [...prev, value];
+      } else {
+        return prev.filter((v) => v !== value);
+      }
+    });
+  };
+
+  const handleIsSoldChange = (checked: boolean, value: boolean) => {
+    setIsSoldFilter((prev) => {
       if (checked) {
         return prev.includes(value) ? prev : [...prev, value];
       } else {
@@ -387,9 +445,9 @@ const VehiclesTable = () => {
                     aria-hidden="true"
                   />
                   Filter
-                  {isNewFilter.length > 0 && (
+                  {(isNewFilter.length > 0 || isSoldFilter.length > 0) && (
                     <span className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                      {isNewFilter.length}
+                      {isNewFilter.length + isSoldFilter.length}
                     </span>
                   )}
                 </Button>
@@ -432,6 +490,41 @@ const VehiclesTable = () => {
                     >
                       Used vehicles
                     </label>
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-1 font-medium">Sale Status</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${id}-filter-sold`}
+                        checked={isSoldFilter.includes(true)}
+                        onCheckedChange={(checked) =>
+                          handleIsSoldChange(!!checked, true)
+                        }
+                      />
+                      <label
+                        htmlFor={`${id}-filter-sold`}
+                        className="cursor-pointer text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Sold
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${id}-filter-unsold`}
+                        checked={isSoldFilter.includes(false)}
+                        onCheckedChange={(checked) =>
+                          handleIsSoldChange(!!checked, false)
+                        }
+                      />
+                      <label
+                        htmlFor={`${id}-filter-unsold`}
+                        className="cursor-pointer text-sm font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Available
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -527,19 +620,30 @@ const VehiclesTable = () => {
               </TableRow>
             ))
           ) : table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
-                className="border-0 [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg h-px hover:bg-accent/50"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="last:py-0 h-[inherit]">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            table.getRowModel().rows.map((row) => {
+              const isSold = row.original.sold_to_id !== null;
+              return (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className={cn(isSold && 'bg-muted/25')}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        width: `${cell.column.getSize()}px`,
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
           ) : (
             <TableRow className="hover:bg-transparent [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
               <TableCell colSpan={columns.length} className="h-24 text-center">

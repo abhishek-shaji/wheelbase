@@ -26,6 +26,11 @@ class Vehicle(Base):
     description = Column(String, nullable=True)
     price = Column(Float, nullable=False)
     first_registration = Column(Date, nullable=False)
+    
+    # Sale information
+    sold_to_id = Column(UUID(as_uuid=True), ForeignKey("customers.id"), nullable=True)
+    sold_to = relationship("Customer", foreign_keys=[sold_to_id])
+    sold_at = Column(DateTime(timezone=True), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)

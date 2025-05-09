@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
 from fastapi_pagination import Page
 
-from app.models.vehicle_model import VehicleCreate, VehicleResponse, VehicleFilter
+from app.models.vehicle_model import VehicleCreate, VehicleResponse, VehicleFilter, VehicleMarkAsSold
 from app.schemas import User
 from app.utilities.auth_utility import get_current_user
 from app.services.vehicles_service import VehiclesService, get_vehicles_service
@@ -69,6 +69,33 @@ class VehiclesController:
         current_user: User = Depends(get_current_user),
     ):
         return self.vehicles_service.update(vehicle_id, form_data, current_user, organization_id)
+        
+    @router.post(
+        "/{vehicle_id}/mark-as-sold",
+        status_code=200,
+        response_model=VehicleResponse,
+    )
+    def mark_vehicle_as_sold(
+        self,
+        organization_id: UUID,
+        vehicle_id: UUID,
+        form_data: VehicleMarkAsSold,
+        current_user: User = Depends(get_current_user),
+    ):
+        return self.vehicles_service.mark_as_sold(vehicle_id, form_data, current_user, organization_id)
+        
+    @router.post(
+        "/{vehicle_id}/mark-as-unsold",
+        status_code=200,
+        response_model=VehicleResponse,
+    )
+    def mark_vehicle_as_unsold(
+        self,
+        organization_id: UUID,
+        vehicle_id: UUID,
+        current_user: User = Depends(get_current_user),
+    ):
+        return self.vehicles_service.mark_as_unsold(vehicle_id, current_user, organization_id)
 
     @router.delete(
         "/{vehicle_id}",
