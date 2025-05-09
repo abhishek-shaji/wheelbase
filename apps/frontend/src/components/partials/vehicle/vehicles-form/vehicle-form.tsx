@@ -39,7 +39,7 @@ const VehicleForm = () => {
   });
 
   const brandOptions = useQuery({
-    queryKey: ['brands'],
+    queryKey: ['brand-values'],
     queryFn: async () => {
       const { response, data } = await client.GET('/brands/');
 
@@ -50,6 +50,8 @@ const VehicleForm = () => {
       return data.map((brand) => ({ value: brand.id, label: brand.name }));
     },
   });
+
+  console.log('Brand options:', brandOptions.data);
 
   const vehicleQuery = useQuery({
     queryKey: ['vehicle', organizationId, vehicleId],

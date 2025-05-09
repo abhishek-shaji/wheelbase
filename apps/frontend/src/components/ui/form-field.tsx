@@ -117,11 +117,12 @@ export const FormField = <T extends FieldValues>({
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
-            {options?.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
+            {Array.isArray(options) &&
+              options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
         {error && <p className="text-sm text-red-400">{errorMessage}</p>}

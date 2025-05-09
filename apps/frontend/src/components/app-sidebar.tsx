@@ -23,7 +23,7 @@ function SidebarLogo() {
   const id = React.useId();
   return (
     <div className="flex gap-2 px-2 group-data-[collapsible=icon]:px-0 transition-[padding] duration-200 ease-in-out">
-      <Link className="group/logo inline-flex" href="/apps/frontend/public">
+      <Link className="group/logo inline-flex" href="/organizations">
         <span className="sr-only">Logo</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"

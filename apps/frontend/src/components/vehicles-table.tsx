@@ -65,10 +65,8 @@ import {
   RiErrorWarningLine,
   RiCloseCircleLine,
   RiDeleteBinLine,
-  RiBardLine,
   RiFilter3Line,
   RiSearch2Line,
-  RiCheckLine,
   RiMoreLine,
   RiCarLine,
 } from '@remixicon/react';
@@ -346,6 +344,7 @@ export default function VehiclesTable() {
       setTotalPages(paginatedData.pages);
       return paginatedData.items || [];
     },
+    refetchOnMount: 'always',
   });
 
   const data = vehiclesQuery.data || [];
@@ -430,8 +429,6 @@ export default function VehiclesTable() {
       columnVisibility,
     },
   });
-
-  const isNewColumn = table.getColumn('is_new');
 
   const handleIsNewChange = (checked: boolean, value: boolean) => {
     setIsNewFilter((prev) => {
@@ -789,7 +786,7 @@ export default function VehiclesTable() {
                 )}
               </>
             )}
-          </p>
+          </div>
           <Pagination className="w-auto">
             <PaginationContent className="gap-3">
               <PaginationItem>
@@ -925,9 +922,9 @@ function RowActions({
             >
               {toggleIsNewMutation.isPending
                 ? 'Updating...'
-                : item.is_new
-                ? 'Mark as used'
-                : 'Mark as new'}
+                : item.is_sold
+                ? 'Mark as unsold'
+                : 'Mark as sold'}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

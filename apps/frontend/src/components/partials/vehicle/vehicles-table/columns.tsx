@@ -4,13 +4,6 @@ import { RiCarLine, RiMoreLine } from '@remixicon/react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { formatDate, formatPrice } from '@/lib/formatters';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Progress } from '@/components/ui/progress';
 import { useState, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
@@ -147,27 +140,12 @@ export const getColumns = ({
   {
     header: 'KMs Driven',
     accessorKey: 'kms_driven',
-    cell: ({ row }) => {
-      const kmsDriven = row.getValue('kms_driven') as number;
-      // Calculate percentage based on a max of 200,000 km
-      const percentage = Math.min(100, (kmsDriven / 200000) * 100);
-
-      return (
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex h-full w-full items-center">
-                <Progress className="h-1 max-w-14" value={percentage} />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent align="start" sideOffset={-8}>
-              <p>{kmsDriven.toLocaleString()} km</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    },
     size: 100,
+    cell: ({ row }) => (
+      <span className="text-xs text-muted-foreground font-mono">
+        {row.getValue('kms_driven')?.toLocaleString()} KMs
+      </span>
+    ),
   },
   {
     header: 'VIN',
