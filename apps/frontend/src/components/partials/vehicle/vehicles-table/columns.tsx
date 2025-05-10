@@ -26,7 +26,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { SchemaVehicleResponse, SchemaCustomerResponse } from '@/types';
 import Link from 'next/link';
@@ -120,7 +119,7 @@ export const getColumns = ({
     size: 130,
   },
   {
-    header: 'Status',
+    header: 'Condition',
     accessorKey: 'is_new',
     cell: ({ row }) => (
       <div className="flex items-center h-full">

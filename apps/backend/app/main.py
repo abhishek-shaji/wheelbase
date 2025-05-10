@@ -6,6 +6,7 @@ from app.controllers import vehicles_controller
 from app.controllers import organizations_controller
 from app.controllers import brands_controller
 from app.controllers import customers_controller
+from app.controllers import statistics_controller
 from scalar_fastapi import get_scalar_api_reference
 
 app = FastAPI(title="DealerHub API", version="1.0.0", docs_url=None)
@@ -24,6 +25,7 @@ app.include_router(vehicles_controller.router, tags=["Vehicles"])
 app.include_router(organizations_controller.router, tags=["Organizations"])
 app.include_router(brands_controller.router, tags=["Brands"])
 app.include_router(customers_controller.router, tags=["Customers"])
+app.include_router(statistics_controller.router, tags=["Statistics"])
 
 add_pagination(app)
 

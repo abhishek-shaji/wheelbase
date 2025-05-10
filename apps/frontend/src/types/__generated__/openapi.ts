@@ -300,6 +300,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizations/{organization_id}/statistics/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Statisticscontroller.Get Dashboard Statistics
+         * @description Get dashboard statistics for an organization
+         */
+        get: operations["StatisticsController_get_dashboard_statistics_organizations__organization_id__statistics_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -397,6 +417,40 @@ export interface components {
              * @description Date and time the customer was created
              */
             created_at: string;
+        };
+        /** CustomerStatistics */
+        CustomerStatistics: {
+            /**
+             * Total Count
+             * @description Total number of customers
+             */
+            total_count: number;
+            /**
+             * Customers By Month
+             * @description Number of new customers by month
+             */
+            customers_by_month: {
+                [key: string]: number;
+            };
+        };
+        /** DashboardStatistics */
+        DashboardStatistics: {
+            /** @description Vehicle statistics */
+            vehicles: components["schemas"]["VehicleStatistics"];
+            /** @description Customer statistics */
+            customers: components["schemas"]["CustomerStatistics"];
+            /**
+             * Total Revenue
+             * @description Total revenue from vehicle sales
+             */
+            total_revenue: number;
+            /**
+             * Revenue By Month
+             * @description Revenue by month
+             */
+            revenue_by_month: {
+                [key: string]: number;
+            };
         };
         /**
          * FuelType
@@ -694,6 +748,45 @@ export interface components {
              */
             created_at: string;
         };
+        /** VehicleStatistics */
+        VehicleStatistics: {
+            /**
+             * Total Count
+             * @description Total number of vehicles
+             */
+            total_count: number;
+            /**
+             * Available Count
+             * @description Number of available (unsold) vehicles
+             */
+            available_count: number;
+            /**
+             * Fuel Type Distribution
+             * @description Count of vehicles by fuel type
+             */
+            fuel_type_distribution: {
+                [key: string]: number;
+            };
+            /**
+             * Brand Distribution
+             * @description Count of vehicles by brand
+             */
+            brand_distribution: {
+                [key: string]: number;
+            };
+            /**
+             * Sales By Month
+             * @description Number of vehicles sold by month
+             */
+            sales_by_month: {
+                [key: string]: number;
+            };
+            /**
+             * Avg Days To Sell
+             * @description Average days from listing to sale
+             */
+            avg_days_to_sell?: number | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -705,6 +798,8 @@ export type SchemaBrandCreate = components['schemas']['BrandCreate'];
 export type SchemaBrandResponse = components['schemas']['BrandResponse'];
 export type SchemaCustomerCreate = components['schemas']['CustomerCreate'];
 export type SchemaCustomerResponse = components['schemas']['CustomerResponse'];
+export type SchemaCustomerStatistics = components['schemas']['CustomerStatistics'];
+export type SchemaDashboardStatistics = components['schemas']['DashboardStatistics'];
 export type SchemaFuelType = components['schemas']['FuelType'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
 export type SchemaOrganizationCreate = components['schemas']['OrganizationCreate'];
@@ -717,6 +812,7 @@ export type SchemaValidationError = components['schemas']['ValidationError'];
 export type SchemaVehicleCreate = components['schemas']['VehicleCreate'];
 export type SchemaVehicleMarkAsSold = components['schemas']['VehicleMarkAsSold'];
 export type SchemaVehicleResponse = components['schemas']['VehicleResponse'];
+export type SchemaVehicleStatistics = components['schemas']['VehicleStatistics'];
 export type $defs = Record<string, never>;
 export interface operations {
     AuthController_register_auth_register_post: {
@@ -829,8 +925,8 @@ export interface operations {
         parameters: {
             query?: {
                 search?: string | null;
-                is_new?: boolean | null;
-                is_sold?: boolean | null;
+                is_new?: string | null;
+                is_sold?: string | null;
                 /** @description Page number */
                 page?: number;
                 /** @description Page size */
@@ -1516,6 +1612,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    StatisticsController_get_dashboard_statistics_organizations__organization_id__statistics_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardStatistics"];
+                };
             };
             /** @description Validation Error */
             422: {

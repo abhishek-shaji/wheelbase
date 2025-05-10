@@ -117,6 +117,7 @@ const CustomerForm = () => {
   const isPending = isEditing
     ? updateCustomerMutation.isPending
     : createCustomerMutation.isPending;
+
   const error = isEditing
     ? updateCustomerMutation.error
     : createCustomerMutation.error;
@@ -138,7 +139,7 @@ const CustomerForm = () => {
   }
 
   return (
-    <div className="rounded-lg p-6 shadow-md">
+    <div className="grid auto-rows-min @2xl:grid-cols-2 *:-ms-px *:-mt-px -m-px pt-6">
       <div className="flex w-full flex-col space-y-6">
         <div className="text-left">
           <h1 className="text-2xl font-bold text-white">
@@ -153,9 +154,7 @@ const CustomerForm = () => {
 
         {error && (
           <div className="rounded-md bg-red-900/30 border border-red-700 p-4 text-sm text-red-400">
-            {error instanceof Error
-              ? error.message
-              : 'An unknown error occurred'}
+            {error.message}
           </div>
         )}
 

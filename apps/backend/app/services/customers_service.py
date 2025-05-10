@@ -19,10 +19,8 @@ class CustomerService(BaseService):
             .filter(Customer.organization_id == organization_id)
         )
 
-        # Check if user has access to this organization
         self._check_organization_access(organization_id, current_user)
 
-        # Apply search filter if provided
         if filter and filter.search:
             search = f"%{filter.search}%"
             query = query.filter(
@@ -38,7 +36,6 @@ class CustomerService(BaseService):
         return customers
 
     def get_one(self, id: UUID, organization_id: UUID, current_user: User):
-        # Check if user has access to this organization
         self._check_organization_access(organization_id, current_user)
 
         customer = (
@@ -49,14 +46,13 @@ class CustomerService(BaseService):
             )
             .first()
         )
-        
+
         if not customer:
             raise HTTPException(status_code=404, detail="Customer not found")
-            
+
         return customer
 
     def create(self, organization_id: UUID, form_data: CustomerCreate, current_user: User):
-        # Check if user has access to this organization
         self._check_organization_access(organization_id, current_user)
 
         customer = Customer(
@@ -82,18 +78,18 @@ class CustomerService(BaseService):
         customer.email = str(form_data.email)
         customer.phone = form_data.phone
         customer.updated_by_id = current_user.id
-        
+
         self.db.commit()
         self.db.refresh(customer)
-        
+
         return customer
 
     def delete(self, id: UUID, organization_id: UUID, current_user: User):
         customer = self.get_one(id, organization_id, current_user)
-            
+
         self.db.delete(customer)
         self.db.commit()
-        
+
         return None
 
     def _check_organization_access(self, organization_id: UUID, current_user: User):
@@ -105,10 +101,10 @@ class CustomerService(BaseService):
             )
             .first()
         )
-        
+
         if not organization:
             raise HTTPException(status_code=404, detail="Organization not found")
 
 
 def get_customer_service(db: Session = Depends(get_db)):
-    return CustomerService(db) 
+    return CustomerService(db)
