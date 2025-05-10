@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/chart';
 import { CustomTooltipContent } from '@/components/charts-extra';
 import { Badge } from '@/components/ui/badge';
-import { DashboardStatistics } from '@/services/useStatistics';
+import { DashboardStatistics } from '@/types';
 
 const chartConfig = {
   revenue: {

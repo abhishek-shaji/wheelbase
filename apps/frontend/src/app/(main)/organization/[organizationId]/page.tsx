@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: 'Dashboard - DealerHub',
 };
 
-import { DashboardStatistics } from '../../../../components/partials/dashboard/statistics';
+import { DashboardStatistics } from '@/components/partials/dashboard/statistics';
 
 export default function Page() {
   return (

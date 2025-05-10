@@ -64,7 +64,7 @@ const CustomerForm = () => {
   const createCustomerMutation = useMutation({
     mutationFn: async (formData: CustomerFormValues) => {
       const { response, data } = await client.POST(
-        '/organizations/{organization_id}/customers',
+        '/organizations/{organization_id}/customers/',
         {
           body: formData,
           params: {

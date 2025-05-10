@@ -265,7 +265,7 @@ function CustomerSelectDialog({
       }
 
       const { response, data } = await client.GET(
-        '/organizations/{organization_id}/customers',
+        '/organizations/{organization_id}/customers/',
         {
           params: {
             path: {

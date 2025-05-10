@@ -1,18 +1,16 @@
 'use client';
 
-import { ReactNode } from 'react';
-import {
-  useDashboardStatistics,
-  DashboardStatistics,
-} from '@/services/useStatistics';
+import React, { ReactNode } from 'react';
+import { useDashboardStatistics } from '@/services/useStatistics';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams } from 'next/navigation';
+import { DashboardStatistics } from '@/types';
 
 interface DashboardProviderProps {
   children: (props: { data: DashboardStatistics }) => ReactNode;
 }
 
-export function DashboardProvider({ children }: DashboardProviderProps) {
+const DashboardProvider: React.FC<DashboardProviderProps> = ({ children }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { data, isLoading, error } = useDashboardStatistics(organizationId);
 
@@ -35,4 +33,6 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   }
 
   return <>{children({ data })}</>;
-}
+};
+
+export { DashboardProvider };

@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { client } from '@/lib/openapi-fetch';
 import { ArrowRightIcon, Loader2, X } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 

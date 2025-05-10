@@ -248,7 +248,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/organizations/{organization_id}/customers": {
+    "/organizations/{organization_id}/customers/": {
         parameters: {
             query?: never;
             header?: never;
@@ -259,13 +259,13 @@ export interface paths {
          * Customerscontroller.Get Customers
          * @description Get a list of customers for an organization
          */
-        get: operations["CustomersController_get_customers_organizations__organization_id__customers_get"];
+        get: operations["CustomersController_get_customers_organizations__organization_id__customers__get"];
         put?: never;
         /**
          * Customerscontroller.Create Customer
          * @description Create a new customer for an organization
          */
-        post: operations["CustomersController_create_customer_organizations__organization_id__customers_post"];
+        post: operations["CustomersController_create_customer_organizations__organization_id__customers__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1457,7 +1457,7 @@ export interface operations {
             };
         };
     };
-    CustomersController_get_customers_organizations__organization_id__customers_get: {
+    CustomersController_get_customers_organizations__organization_id__customers__get: {
         parameters: {
             query?: {
                 /** @description Search term for filtering customers */
@@ -1491,7 +1491,7 @@ export interface operations {
             };
         };
     };
-    CustomersController_create_customer_organizations__organization_id__customers_post: {
+    CustomersController_create_customer_organizations__organization_id__customers__post: {
         parameters: {
             query?: never;
             header?: never;

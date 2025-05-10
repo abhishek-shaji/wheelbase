@@ -1,20 +1,27 @@
 'use client';
 
-import { useId } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { VehicleStatistics } from '@/services/useStatistics';
 import { Badge } from '@/components/ui/badge';
+import { DashboardStatistics } from '@/types';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 interface VehicleStatsProps {
-  data: VehicleStatistics;
+  data: DashboardStatistics['vehicles'];
 }
 
-export function VehicleStats({ data }: VehicleStatsProps) {
-  const id = useId();
+function calculatePercentage(
+  value: number,
+  distribution: Record<string, number>
+) {
+  const total = Object.values(distribution).reduce(
+    (sum, count) => sum + (count as number),
+    0
+  );
+  return total > 0 ? (value / total) * 100 : 0;
+}
 
-  // Fuel Type Distribution
+const VehicleStats = ({ data }: VehicleStatsProps) => {
   const fuelTypeData = Object.entries(data.fuel_type_distribution || {}).map(
     ([name, value], index) => ({
       name,
@@ -24,7 +31,6 @@ export function VehicleStats({ data }: VehicleStatsProps) {
     })
   );
 
-  // Calculate total
   const totalVehicles = Object.values(data.fuel_type_distribution || {}).reduce(
     (sum, count) => sum + (count as number),
     0
@@ -95,16 +101,6 @@ export function VehicleStats({ data }: VehicleStatsProps) {
       </CardContent>
     </Card>
   );
-}
+};
 
-// Helper function to calculate percentage
-function calculatePercentage(
-  value: number,
-  distribution: Record<string, number>
-) {
-  const total = Object.values(distribution).reduce(
-    (sum, count) => sum + (count as number),
-    0
-  );
-  return total > 0 ? (value / total) * 100 : 0;
-}
+export { VehicleStats };

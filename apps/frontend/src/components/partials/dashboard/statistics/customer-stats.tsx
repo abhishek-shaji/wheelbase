@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/chart';
 import { CustomTooltipContent } from '@/components/charts-extra';
 import { Badge } from '@/components/ui/badge';
-import { CustomerStatistics } from '@/services/useStatistics';
+import { DashboardStatistics } from '@/types';
 
 const chartConfig = {
   count: {
@@ -21,7 +21,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 interface CustomerStatsProps {
-  data: CustomerStatistics;
+  data: DashboardStatistics['customers'];
 }
 
 export function CustomerStats({ data }: CustomerStatsProps) {
