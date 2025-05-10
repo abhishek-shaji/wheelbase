@@ -1,200 +1,40 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from '@/components/ui/pagination';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  flexRender,
   getCoreRowModel,
   getPaginationRowModel,
-  PaginationState,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  RiCloseCircleLine,
-  RiDeleteBinLine,
-  RiErrorWarningLine,
-  RiSearch2Line,
-} from '@remixicon/react';
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { client } from '@/lib/openapi-fetch';
-import { useParams } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useQueryState, parseAsInteger, parseAsString } from 'nuqs';
-import { useDebounce } from 'use-debounce';
-import {
-  getColumns,
-  Customer,
-} from '@/components/partials/customer/customers-table/columns';
+import { CustomersSearch } from './customers-search';
+import { CustomersDeleteAction } from './customers-delete-action';
+import { CustomersDataTable } from './customers-data-table';
+import { CustomersPagination } from './customers-pagination';
+import { useCustomersData } from './use-customers-data';
+import { getColumns, Customer } from './columns';
 
 const CustomersTable = () => {
-  const id = useId();
-  const params = useParams<{ organizationId: string }>();
-  const organizationId = params.organizationId;
-
-  const [pageIndex, setPageIndex] = useQueryState(
-    'page',
-    parseAsInteger.withDefault(0)
-  );
-  const [pageSize, setPageSize] = useQueryState(
-    'size',
-    parseAsInteger.withDefault(10)
-  );
-
-  const pagination: PaginationState = {
-    pageIndex: pageIndex,
-    pageSize: pageSize,
-  };
-
-  const setPagination = useCallback(
-    (
-      updater: PaginationState | ((state: PaginationState) => PaginationState)
-    ) => {
-      const newPagination =
-        typeof updater === 'function' ? updater(pagination) : updater;
-      setPageIndex(newPagination.pageIndex);
-      setPageSize(newPagination.pageSize);
-    },
-    [pagination, setPageIndex, setPageSize]
-  );
-
-  const [searchTerm, setSearchTerm] = useQueryState(
-    'search',
-    parseAsString.withDefault('')
-  );
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-  const [debouncedSearchTerm] = useDebounce(localSearchTerm, 500);
-
-  useEffect(() => {
-    setSearchTerm(debouncedSearchTerm);
-  }, [debouncedSearchTerm, setSearchTerm]);
-
-  useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
-
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const customersQuery = useQuery({
-    queryKey: ['customers', organizationId, pageIndex, pageSize, searchTerm],
-    refetchOnMount: 'always',
-    queryFn: async () => {
-      const queryParams: Record<string, string> = {
-        page: String(pageIndex + 1),
-        size: String(pageSize),
-      };
-
-      if (searchTerm) {
-        queryParams.search = searchTerm;
-      }
-
-      const { response, data } = await client.GET(
-        '/organizations/{organization_id}/customers/',
-        {
-          params: {
-            path: {
-              organization_id: organizationId,
-            },
-            query: queryParams,
-          },
-        }
-      );
-
-      if (response.status !== 200 || !data) {
-        throw new Error('Failed to fetch data');
-      }
-
-      // Simulate paginated response if the backend doesn't support it yet
-      const paginatedData = {
-        items: data,
-        total: data.length,
-        page: pageIndex + 1,
-        size: pageSize,
-        pages: Math.ceil(data.length / pageSize) || 1,
-      };
-
-      setTotal(paginatedData.total);
-      setTotalPages(paginatedData.pages);
-
-      return paginatedData.items || [];
-    },
-  });
-
-  const data = customersQuery.data || [];
-  const isLoading = customersQuery.isLoading;
-  const queryClient = useQueryClient();
-
-  const setData = useCallback(
-    (newData: Customer[] | ((prev: Customer[]) => Customer[])) => {
-      queryClient.setQueryData(
-        ['customers', organizationId, pageIndex, pageSize, searchTerm],
-        typeof newData === 'function' ? newData(data) : newData
-      );
-    },
-    [queryClient, data, organizationId, pageIndex, pageSize, searchTerm]
-  );
+  const {
+    data,
+    isLoading,
+    setData,
+    pagination,
+    setPagination,
+    localSearchTerm,
+    handleSearchChange,
+    handleSearchClear,
+    deleteRowsMutation,
+    total,
+    totalPages,
+  } = useCustomersData();
 
   const columns = useMemo(() => getColumns({ data, setData }), [data, setData]);
 
-  const deleteRowsMutation = useMutation({
-    mutationFn: async () => {
-      const selectedRows = table.getSelectedRowModel().rows;
-      return selectedRows.map((row) => row.original.id);
-    },
-    onSuccess: (deletedIds) => {
-      setData((currentData) =>
-        currentData.filter((item) => !deletedIds.includes(item.id))
-      );
-      table.resetRowSelection();
-    },
-  });
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalSearchTerm(e.target.value);
-  };
-
-  const handleSearchClear = () => {
-    setLocalSearchTerm('');
-    setSearchTerm('');
-    inputRef.current?.focus();
-  };
-
   const handleDeleteRows = () => {
-    deleteRowsMutation.mutate();
+    const selectedRows = table.getSelectedRowModel().rows;
+    const selectedIds = selectedRows.map((row) => row.original.id);
+    deleteRowsMutation.mutate(selectedIds);
+    table.resetRowSelection();
   };
 
   const table = useReactTable<Customer>({
@@ -214,241 +54,38 @@ const CustomersTable = () => {
 
   return (
     <div className="space-y-4">
-      {/* Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Left side */}
         <div className="flex items-center gap-3">
-          {/* Search input */}
-          <div className="relative">
-            <Input
-              id={`${id}-input`}
-              ref={inputRef}
-              className={cn(
-                'peer min-w-60 ps-9 bg-background bg-gradient-to-br from-accent/60 to-accent',
-                Boolean(localSearchTerm) && 'pe-9'
-              )}
-              value={localSearchTerm}
-              onChange={handleSearchChange}
-              placeholder="Search customers..."
-              type="text"
-              aria-label="Search customers"
-              disabled={isLoading}
-            />
-            <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 text-muted-foreground/60 peer-disabled:opacity-50">
-              {isLoading ? (
-                <Skeleton className="h-5 w-5 rounded-full" />
-              ) : (
-                <RiSearch2Line size={20} aria-hidden="true" />
-              )}
-            </div>
-            {Boolean(localSearchTerm) && !isLoading && (
-              <button
-                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/60 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Clear search"
-                onClick={handleSearchClear}
-              >
-                <RiCloseCircleLine size={16} aria-hidden="true" />
-              </button>
-            )}
-          </div>
+          <CustomersSearch
+            isLoading={isLoading}
+            searchTerm={localSearchTerm}
+            onSearchChange={handleSearchChange}
+            onSearchClear={handleSearchClear}
+          />
         </div>
-        {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Delete button */}
           {!isLoading && selectedRowsCount > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="ml-auto" variant="outline">
-                  <RiDeleteBinLine
-                    className="-ms-1 opacity-60"
-                    size={16}
-                    aria-hidden="true"
-                  />
-                  Delete
-                  <span className="-me-1 ms-1 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                    {selectedRowsCount}
-                  </span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
-                  <div
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border"
-                    aria-hidden="true"
-                  >
-                    <RiErrorWarningLine className="opacity-80" size={16} />
-                  </div>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete{' '}
-                      {selectedRowsCount} selected{' '}
-                      {selectedRowsCount === 1 ? 'customer' : 'customers'}.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteRows}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <CustomersDeleteAction
+              selectedRowsCount={selectedRowsCount}
+              onDelete={handleDeleteRows}
+            />
           )}
         </div>
       </div>
-
-      {/* Table */}
-      <Table className="table-fixed border-separate border-spacing-0 [&_tr:not(:last-child)_td]:border-b">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead
-                    key={header.id}
-                    style={{ width: header.getSize() }}
-                    className="relative h-9 select-none bg-sidebar border-y border-border first:border-l first:rounded-l-lg last:border-r last:rounded-r-lg"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <tbody aria-hidden="true" className="table-row h-1"></tbody>
-        <TableBody>
-          {isLoading ? (
-            Array.from({ length: pagination.pageSize }).map((_, index) => (
-              <TableRow
-                key={`skeleton-${index}`}
-                className="hover:bg-transparent [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg h-px"
-              >
-                {/* Checkbox column */}
-                <TableCell className="h-[inherit]">
-                  <Skeleton className="h-4 w-4" />
-                </TableCell>
-
-                {/* Name column */}
-                <TableCell className="h-[inherit]">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                  </div>
-                </TableCell>
-
-                {/* Email column */}
-                <TableCell className="h-[inherit]">
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-
-                {/* Phone column */}
-                <TableCell className="h-[inherit]">
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-
-                {/* Actions column */}
-                <TableCell className="h-[inherit]">
-                  <div className="flex justify-end">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
-                className="border-0 [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg h-px hover:bg-accent/50"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="last:py-0 h-[inherit]">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow className="hover:bg-transparent [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-        <tbody aria-hidden="true" className="table-row h-1"></tbody>
-      </Table>
-
-      {/* Pagination */}
+      <CustomersDataTable
+        table={table}
+        isLoading={isLoading}
+        data={data}
+        columns={columns}
+      />
       {(data.length > 0 || isLoading) && (
-        <div className="flex items-center justify-between gap-3">
-          <div
-            className="flex-1 whitespace-nowrap text-sm text-muted-foreground"
-            aria-live="polite"
-          >
-            {isLoading ? (
-              <Skeleton className="h-4 w-40" />
-            ) : (
-              <>
-                Page <span className="text-foreground">{pageIndex + 1}</span> of{' '}
-                <span className="text-foreground">{totalPages}</span>
-                {total > 0 && (
-                  <>
-                    {' '}
-                    · <span className="text-foreground">{total}</span> customers
-                  </>
-                )}
-              </>
-            )}
-          </div>
-          <Pagination className="w-auto">
-            <PaginationContent className="gap-3">
-              <PaginationItem>
-                {isLoading ? (
-                  <Skeleton className="h-9 w-20" />
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                    aria-label="Go to previous page"
-                  >
-                    Previous
-                  </Button>
-                )}
-              </PaginationItem>
-              <PaginationItem>
-                {isLoading ? (
-                  <Skeleton className="h-9 w-20" />
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                    aria-label="Go to next page"
-                  >
-                    Next
-                  </Button>
-                )}
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        <CustomersPagination
+          isLoading={isLoading}
+          total={total}
+          pageIndex={pagination.pageIndex}
+          totalPages={totalPages}
+          table={table}
+        />
       )}
     </div>
   );
