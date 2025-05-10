@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { CustomersTable } from '@/components/partials/customer';
 
 export const metadata: Metadata = {
-  title: 'Customers List',
+  title: 'Customers List - Wheelbase',
   description: 'List of customers',
 };
 

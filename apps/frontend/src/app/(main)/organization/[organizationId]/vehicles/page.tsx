@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import VehiclesTable from '@/components/partials/vehicle/vehicles-table';
 
 export const metadata: Metadata = {
-  title: 'Vehicles List',
+  title: 'Vehicles List - Wheelbase',
   description: 'List of vehicles',
 };
 

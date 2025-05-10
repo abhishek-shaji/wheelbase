@@ -1,9 +1,13 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+
 import { Button } from '@/components/ui/button';
-import { OrganizationList } from '@/components/partials/organization-list';
+import { OrganizationList } from '@/components/partials/organization/organization-list';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Organization List | WheelBase',
+};
 
 const OrganizationListPage = () => {
   return (

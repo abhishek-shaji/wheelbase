@@ -1,7 +1,10 @@
+'use client';
+
 import { ArrowRightIcon, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useMutation, useQuery } from '@tanstack/react-query';
+
 import { client } from '@/lib/openapi-fetch';
 
 export const OrganizationList = () => {
