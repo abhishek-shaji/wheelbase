@@ -1,0 +1,126 @@
+name: Deploy Backend to AWS ECS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/backend/**'
+      - 'terraform/backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION || 'eu-central-1' }}
+  ECR_REPOSITORY: wheelbase-backend
+  SERVICE_NAME: wheelbase-backend
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID || '045308480883' }}
+
+jobs:
+  terraform-setup:
+    name: Setup Infrastructure with Terraform
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      ecr-repository: ${{ steps.terraform-output.outputs.ecr_repository_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+
+      - name: Create terraform.tfvars
+        working-directory: terraform/backend
+        run: |
+          cat > terraform.tfvars << EOF
+          aws_region = "${{ env.AWS_REGION }}"
+          aws_account_id = "${{ env.AWS_ACCOUNT_ID }}"
+          environment = "${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}"
+          service_name = "${{ env.SERVICE_NAME }}"
+          ecr_repository_name = "${{ env.ECR_REPOSITORY }}"
+          image_tag = "${GITHUB_SHA::8}"
+          EOF
+
+      - name: Terraform Init
+        working-directory: terraform/backend
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform/backend
+        run: terraform apply -auto-approve
+
+      - name: Terraform Output
+        id: terraform-output
+        working-directory: terraform/backend
+        run: |
+          echo "::set-output name=ecr_repository_url::$(terraform output -raw ecr_repository_url)"
+
+  build-and-deploy:
+    name: Build and Deploy Docker Image
+    needs: terraform-setup
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        working-directory: apps/backend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_SHA::8} .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_SHA::8}
+
+      - name: Create SSM Parameters for Environment Variables
+        run: |
+          # Create or update the SSM parameters
+          aws ssm put-parameter \
+            --name "/wheelbase/DATABASE_URL" \
+            --value "${{ secrets.DATABASE_URL }}" \
+            --type SecureString \
+            --overwrite
+            
+          aws ssm put-parameter \
+            --name "/wheelbase/SECRET_KEY" \
+            --value "${{ secrets.SECRET_KEY }}" \
+            --type SecureString \
+            --overwrite
+
+      - name: Force new deployment
+        run: |
+          aws ecs update-service --cluster wheelbase-cluster --service ${{ env.SERVICE_NAME }} --force-new-deployment
+
+      - name: Wait for service stability
+        run: |
+          aws ecs wait services-stable --cluster wheelbase-cluster --services ${{ env.SERVICE_NAME }}
+
+      - name: Get ALB DNS Name
+        working-directory: terraform/backend
+        run: |
+          echo "Application is now available at http://$(terraform output -raw alb_dns_name)"
