@@ -13,7 +13,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import {
@@ -59,13 +58,7 @@ import {
 import { client } from '@/lib/openapi-fetch';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  useQueryState,
-  parseAsInteger,
-  parseAsString,
-  parseAsArrayOf,
-  parseAsBoolean,
-} from 'nuqs';
+import { useQueryState, parseAsInteger, parseAsString } from 'nuqs';
 import { useDebounce } from 'use-debounce';
 import {
   getColumns,
@@ -127,14 +120,14 @@ const VehiclesTable = () => {
     setLocalSearchTerm(searchTerm);
   }, [searchTerm]);
 
-  const [isNewFilter, setIsNewFilter] = useQueryState(
-    'isNew',
-    parseAsArrayOf(parseAsBoolean).withDefault([])
+  const [vehicleStatus, setVehicleStatus] = useQueryState(
+    'vehicleStatus',
+    parseAsString.withDefault('')
   );
 
-  const [isSoldFilter, setIsSoldFilter] = useQueryState(
-    'isSold',
-    parseAsArrayOf(parseAsBoolean).withDefault([])
+  const [saleStatus, setSaleStatus] = useQueryState(
+    'saleStatus',
+    parseAsString.withDefault('')
   );
 
   const [total, setTotal] = useState(0);
@@ -198,8 +191,8 @@ const VehiclesTable = () => {
       pageIndex,
       pageSize,
       searchTerm,
-      isNewFilter,
-      isSoldFilter,
+      vehicleStatus,
+      saleStatus,
     ],
     refetchOnMount: 'always',
     queryFn: async () => {
@@ -212,12 +205,12 @@ const VehiclesTable = () => {
         queryParams.search = searchTerm;
       }
 
-      if (isNewFilter.length > 0) {
-        queryParams['is_new'] = isNewFilter.join(',');
+      if (vehicleStatus) {
+        queryParams.vehicle_status = vehicleStatus;
       }
 
-      if (isSoldFilter.length > 0) {
-        queryParams['is_sold'] = isSoldFilter.join(',');
+      if (saleStatus) {
+        queryParams.sale_status = saleStatus;
       }
 
       const { response, data } = await client.GET(
@@ -256,8 +249,8 @@ const VehiclesTable = () => {
           pageIndex,
           pageSize,
           searchTerm,
-          isNewFilter,
-          isSoldFilter,
+          vehicleStatus,
+          saleStatus,
         ],
         typeof newData === 'function' ? newData(data) : newData
       );
@@ -269,8 +262,8 @@ const VehiclesTable = () => {
       pageIndex,
       pageSize,
       searchTerm,
-      isNewFilter,
-      isSoldFilter,
+      vehicleStatus,
+      saleStatus,
     ]
   );
 
@@ -308,26 +301,6 @@ const VehiclesTable = () => {
       pagination,
     },
   });
-
-  const handleIsNewChange = (checked: boolean, value: boolean) => {
-    setIsNewFilter((prev) => {
-      if (checked) {
-        return prev.includes(value) ? prev : [...prev, value];
-      } else {
-        return prev.filter((v) => v !== value);
-      }
-    });
-  };
-
-  const handleIsSoldChange = (checked: boolean, value: boolean) => {
-    setIsSoldFilter((prev) => {
-      if (checked) {
-        return prev.includes(value) ? prev : [...prev, value];
-      } else {
-        return prev.filter((v) => v !== value);
-      }
-    });
-  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearchTerm(e.target.value);
@@ -441,11 +414,6 @@ const VehiclesTable = () => {
                     aria-hidden="true"
                   />
                   Filter
-                  {(isNewFilter.length > 0 || isSoldFilter.length > 0) && (
-                    <span className="-me-1 ms-3 inline-flex h-5 max-h-full items-center rounded border border-border bg-background px-1 font-[inherit] text-[0.625rem] font-medium text-muted-foreground/70">
-                      {isNewFilter.length + isSoldFilter.length}
-                    </span>
-                  )}
                 </Button>
               )}
             </PopoverTrigger>
@@ -456,13 +424,13 @@ const VehiclesTable = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">
-                    <Checkbox
+                    <input
+                      type="radio"
                       id="filter-new"
-                      checked={isNewFilter.includes(true)}
-                      onCheckedChange={(checked) =>
-                        handleIsNewChange(!!checked, true)
-                      }
+                      checked={vehicleStatus === 'new'}
+                      onChange={() => setVehicleStatus('new')}
                       disabled={isLoading}
+                      name="vehicleStatus"
                     />
                     <label
                       htmlFor="filter-new"
@@ -472,13 +440,13 @@ const VehiclesTable = () => {
                     </label>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Checkbox
+                    <input
+                      type="radio"
                       id="filter-used"
-                      checked={isNewFilter.includes(false)}
-                      onCheckedChange={(checked) =>
-                        handleIsNewChange(!!checked, false)
-                      }
+                      checked={vehicleStatus === 'used'}
+                      onChange={() => setVehicleStatus('used')}
                       disabled={isLoading}
+                      name="vehicleStatus"
                     />
                     <label
                       htmlFor="filter-used"
@@ -487,17 +455,28 @@ const VehiclesTable = () => {
                       Used vehicles
                     </label>
                   </div>
+                  {vehicleStatus && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setVehicleStatus('')}
+                      className="mt-1 h-auto w-full py-1 text-xs"
+                    >
+                      Clear
+                    </Button>
+                  )}
                 </div>
                 <div>
                   <div className="mb-1 font-medium">Sale Status</div>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
-                      <Checkbox
+                      <input
+                        type="radio"
                         id={`${id}-filter-sold`}
-                        checked={isSoldFilter.includes(true)}
-                        onCheckedChange={(checked) =>
-                          handleIsSoldChange(!!checked, true)
-                        }
+                        checked={saleStatus === 'sold'}
+                        onChange={() => setSaleStatus('sold')}
+                        disabled={isLoading}
+                        name="saleStatus"
                       />
                       <label
                         htmlFor={`${id}-filter-sold`}
@@ -507,12 +486,13 @@ const VehiclesTable = () => {
                       </label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Checkbox
+                      <input
+                        type="radio"
                         id={`${id}-filter-unsold`}
-                        checked={isSoldFilter.includes(false)}
-                        onCheckedChange={(checked) =>
-                          handleIsSoldChange(!!checked, false)
-                        }
+                        checked={saleStatus === 'unsold'}
+                        onChange={() => setSaleStatus('unsold')}
+                        disabled={isLoading}
+                        name="saleStatus"
                       />
                       <label
                         htmlFor={`${id}-filter-unsold`}
@@ -521,6 +501,16 @@ const VehiclesTable = () => {
                         Available
                       </label>
                     </div>
+                    {saleStatus && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSaleStatus('')}
+                        className="mt-1 h-auto w-full py-1 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

@@ -182,5 +182,5 @@ class VehicleResponse(BaseModel):
 
 class VehicleFilter(BaseModel):
     search: Optional[str] = Field(default=None)
-    is_new: Optional[str] = Field(default=None)
-    is_sold: Optional[str] = Field(default=None) 
+    vehicle_status: Optional[Literal["new", "used"]] = Field(default=None, description="Filter by vehicle status (new or used)")
+    sale_status: Optional[Literal["sold", "unsold"]] = Field(default=None, description="Filter by sale status (sold or unsold)") 

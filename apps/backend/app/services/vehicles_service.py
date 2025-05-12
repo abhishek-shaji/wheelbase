@@ -34,32 +34,16 @@ class VehiclesService(BaseService):
                 )
             )
 
-        if filter_params.is_new is not None:
-            query = query.filter(Vehicle.is_new == filter_params.is_new)
-        else:
-            is_new_values = []
-            if filter_params.is_new_0 is not None:
-                is_new_values.append(filter_params.is_new_0)
-            if filter_params.is_new_1 is not None:
-                is_new_values.append(filter_params.is_new_1)
-                
-            if is_new_values:
-                query = query.filter(Vehicle.is_new.in_(is_new_values))
+        if filter_params.vehicle_status is not None:
+            if filter_params.vehicle_status == "new":
+                query = query.filter(Vehicle.is_new == True)
+            elif filter_params.vehicle_status == "used":
+                query = query.filter(Vehicle.is_new == False)
             
-        if filter_params.is_sold is not None:
-            if filter_params.is_sold:
+        if filter_params.sale_status is not None:
+            if filter_params.sale_status == "sold":
                 query = query.filter(Vehicle.sold_to_id != None)
-            else:
-                query = query.filter(Vehicle.sold_to_id == None)
-        else:
-            is_sold_true = filter_params.is_sold_0 is True or filter_params.is_sold_1 is True
-            is_sold_false = filter_params.is_sold_0 is False or filter_params.is_sold_1 is False
-            
-            if is_sold_true and is_sold_false:
-                pass
-            elif is_sold_true:
-                query = query.filter(Vehicle.sold_to_id != None)
-            elif is_sold_false:
+            elif filter_params.sale_status == "unsold":
                 query = query.filter(Vehicle.sold_to_id == None)
 
         vehicles = query.all()
