@@ -12,14 +12,6 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.API_BASE_URL}/:path*`,
-      },
-    ];
-  },
   images: {
     remotePatterns: [
       {
